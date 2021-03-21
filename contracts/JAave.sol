@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
 /**
  * Created on 2021-02-11
- * @summary: Jibrel Compound Tranche Deployer
+ * @summary: Jibrel Aave Tranche Deployer
  * @author: Jibrel Team
  */
 pragma solidity ^0.6.12;
+pragma experimental ABIEncoderV2; // needed for getAllAtokens and getAllReservesTokens
 
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "./interfaces/IAaveProtocolDataProvider.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/ILendingPoolAddressesProvider.sol";
-import "./interfaces/IWETHGateway.sol";
 import "./TransferETHHelper.sol";
 import "./IJPriceOracle.sol";
 import "./IJTrancheTokens.sol";
@@ -57,56 +58,64 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         fLock = false;
     }
 
-    // This is needed to receive ETH when calling redeemCEth function
     fallback() external payable {}
     receive() external payable {}
 
     /**
      * @dev set how many blocks will be produced per year on the blockchain 
-     * @param _newValue new value (Compound blocksPerYear = 2102400)
+     * @param _newValue new value
      */
     function setBlocksPerYear(uint256 _newValue) external onlyAdmins {
         totalBlocksPerYear = _newValue;
     }
 
     /**
-     * @dev set Aave Pool
-     * @param _trancheNum tranche number
-     * @param _addressProviderContract aave pool contract address (kovan: 0x88757f2f99175387aB4C6a4b3067c77A695b0349)
+     * @dev set Aave Pool Address Provider
+     * @param _addressProviderContract aave lending pool address provider contract address (kovan: 0x88757f2f99175387aB4C6a4b3067c77A695b0349)
      */
-    function setAavePool(uint256 _trancheNum, address payable _addressProviderContract) external onlyAdmins {
-        trancheAddresses[_trancheNum].lendingPoolAddressProvider = _addressProviderContract;
-    }
-/*
-    function getDataProvider(address _market) internal view returns(ILendingPoolAddressesProvider) {
-        return IAaveProtocolDataProviderV2(ILendingPoolAddressesProvider(_market).getAddress(0x0100000000000000000000000000000000000000000000000000000000000000));
+    function setAavePoolAddressProvider(address _addressProviderContract) external onlyAdmins {
+        lendingPoolAddressProvider = _addressProviderContract;
     }
 
-    function setUserUseReserveAsCollateralIfNeeded(address _market, address _tokenAddr) public {
-        address lendingPool = ILendingPoolAddressesProvider(_market).getLendingPool();
-        IAaveProtocolDataProviderV2 dataProvider = getDataProvider(_market);
-
-        (,,,,,,,,bool collateralEnabled) = dataProvider.getUserReserveData(_tokenAddr, address(this));
-
-        if (!collateralEnabled) {
-            ILendingPool(lendingPool).setUserUseReserveAsCollateral(_tokenAddr, true);
-        }
+    /**
+     * @dev get Aave Pool Address Provider starting from lending pool address provider
+     */
+    function getDataProvider() public view returns(IAaveProtocolDataProvider) {
+        require(lendingPoolAddressProvider != address(0), "AProtocol: set lending pool address provider");
+        return IAaveProtocolDataProvider(ILendingPoolAddressesProvider(lendingPoolAddressProvider)
+                    .getAddress(0x0100000000000000000000000000000000000000000000000000000000000000));
     }
 
-/* 
-    function makeDeposit() public payable  {
-        ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
-        IERC20(dai).approve(provider.getLendingPoolCore(), amount);
-        lendingPool.deposit(dai, amount, 0);
+    /**
+     * @dev get Aave all tokens
+     */
+    function getAllATokens() external view returns(IAaveProtocolDataProvider.TokenData[] memory) {
+        require(lendingPoolAddressProvider != address(0), "AProtocol: set lending pool address provider");
+        IAaveProtocolDataProvider aaveProtocolDataProvider = getDataProvider();
+        return aaveProtocolDataProvider.getAllATokens();
     }
-*/
-    /// @notice User deposits tokens to the Aave protocol
-    /// @dev User needs to approve the DSProxy to pull the _tokenAddr tokens
-    /// @param _market address provider for specific market
-    /// @param _tokenAddr The address of the token to be deposited
-    /// @param _amount Amount of tokens to be deposited
-    function aaveDeposit(address _market, address _tokenAddr, uint256 _amount) public /*burnGas(5)*/ payable {
-        address lendingPool = ILendingPoolAddressesProvider(_market).getLendingPool();
+
+    /**
+     * @dev get Aave all reserved tokens
+     */
+    function getAllReservesTokens() external view returns(IAaveProtocolDataProvider.TokenData[] memory) {
+        require(lendingPoolAddressProvider != address(0), "AProtocol: set lending pool address provider");
+        IAaveProtocolDataProvider aaveProtocolDataProvider = getDataProvider();
+        return aaveProtocolDataProvider.getAllReservesTokens();
+    }
+
+    function getLendingPool() external view returns (address) {
+        return ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
+    }
+
+    /**
+     *  @notice User deposits tokens to the Aave protocol
+     *  @dev User needs to approve the DSProxy to pull the _tokenAddr tokens
+     *  @param _tokenAddr The address of the token to be deposited
+     *  @param _amount Amount of tokens to be deposited
+     */
+    function aaveDeposit(address _tokenAddr, uint256 _amount) public payable {
+        address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
 
         if (_tokenAddr == ETH_ADDR) {
             require(msg.value == _amount);
@@ -116,37 +125,43 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
             SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), _amount);
         }
 
-        SafeERC20.safeApprove(IERC20(_tokenAddr), lendingPool, uint256(-1));
+        SafeERC20.safeApprove(IERC20(_tokenAddr), lendingPool, _amount);
         ILendingPool(lendingPool).deposit(_tokenAddr, _amount, address(this), AAVE_REFERRAL_CODE);
-
-        //setUserUseReserveAsCollateralIfNeeded(_market, _tokenAddr);
     }
 
     function changeToWeth(address _token) private pure returns(address) {
         if (_token == ETH_ADDR) {
             return WETH_ADDRESS;
         }
-
         return _token;
     }
 
-    /// @notice User withdraws tokens from the Aave protocol
-    /// @param _market address provider for specific market
-    /// @param _tokenAddr The address of the token to be withdrawn
-    /// @param _amount Amount of tokens to be withdrawn -> send -1 for whole amount
-    function aaveWithdraw(address _market, address _tokenAddr, uint256 _amount) public /*burnGas(8)*/ {
-        address lendingPool = ILendingPoolAddressesProvider(_market).getLendingPool();
+    /** 
+     * @dev User withdraws tokens from the Aave protocol
+     * @param _tokenAddr The address of the token to be withdrawn
+     * @param _amount Amount of tokens to be withdrawn
+     * @param _to receiver address
+     */ 
+    function aaveWithdraw(address _tokenAddr, uint256 _amount, address _to) public {
+        address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         _tokenAddr = changeToWeth(_tokenAddr);
 
+        uint256 oldBalance;
+        uint256 newBalance;
         if (_tokenAddr == WETH_ADDRESS) {
+            // get eth balance
+            oldBalance = getEthBalance();
             // if weth, pull to proxy and return ETH to user
             ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, address(this));
-            // needs to use balance of in case that amount is -1 for whole debt
-            TokenInterface(WETH_ADDRESS).withdraw(TokenInterface(WETH_ADDRESS).balanceOf(address(this)));
-            msg.sender.transfer(address(this).balance);
+            // from Weth to Eth, all the Weth balance --> no Weth in contract
+            TokenInterface(WETH_ADDRESS).withdraw(IERC20(WETH_ADDRESS).balanceOf(address(this)));
+            // get new eth balance
+            newBalance = getEthBalance();
+            if (newBalance > oldBalance)
+                TransferETHHelper.safeTransferETH(_to, _amount);
         } else {
             // if not eth send directly to user
-            ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, msg.sender);
+            ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, _to);
         }
     }
 
@@ -166,7 +181,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _trancheNum tranche number
      * @param _redeemPercent user redemption percent
      */
-    function setTrancheVaultPercentage(uint256 _trancheNum, uint16 _redeemPercent) external onlyAdmins {
+    function setTrancheRedemptionPercentage(uint256 _trancheNum, uint16 _redeemPercent) external onlyAdmins {
         trancheParameters[_trancheNum].redemptionPercentage = _redeemPercent;
     }
 
@@ -187,7 +202,8 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
             uint256 _fixedRpb, 
             uint8 _aTokenDec, 
             uint8 _underlyingDec) external onlyAdmins locked {
-        require(tranchesDeployerAddress != address(0), "CProtocol: set tranche eth deployer");
+        require(tranchesDeployerAddress != address(0), "AProtocol: set tranche eth deployer");
+        require(lendingPoolAddressProvider != address(0), "AProtocol: set lending pool address provider");
 
         trancheAddresses[tranchePairCounter].buyerCoinAddress = _buyerCoinAddress;
         trancheAddresses[tranchePairCounter].aTokenAddress = _aTokenAddress;
@@ -201,7 +217,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         trancheParameters[tranchePairCounter].underlyingDecimals = _underlyingDec;
         trancheParameters[tranchePairCounter].trancheAFixedPercentage = _fixedRpb;
         trancheParameters[tranchePairCounter].trancheALastActionBlock = block.number;
-        trancheParameters[tranchePairCounter].storedTrancheAPrice = uint256(1e18); //getCompoundPrice(tranchePairCounter);
+        trancheParameters[tranchePairCounter].storedTrancheAPrice = uint256(1e18);
 
         trancheParameters[tranchePairCounter].redemptionPercentage = 9950;  //default value 99.5%
 
@@ -267,7 +283,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _trancheNum tranche number
      * @return tranche B value
      */
-    function getTrBValue(uint256 _trancheNum) external view returns (uint256) {
+    function getTrBValue(uint256 _trancheNum) public view returns (uint256) {
         uint256 totProtValue = getTotalValue(_trancheNum);
         uint256 totTrAValue = getTrAValue(_trancheNum);
         if (totProtValue > totTrAValue) {
@@ -282,10 +298,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @return tranche total value
      */
     function getTotalValue(uint256 _trancheNum) public view returns (uint256) {
-        //uint256 compPrice = getCompoundPrice(_trancheNum);
-        uint256 compPrice = 1;
-        uint256 totProtSupply = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
-        return totProtSupply.mul(compPrice).div(10 ** uint256(trancheParameters[_trancheNum].aTokenDecimals));
+        return getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
     }
 
     /**
@@ -296,12 +309,11 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      */
     function getTrancheBExchangeRate(uint256 _trancheNum, uint256 _newAmount) public view returns (uint256 tbPrice) {
         // set amount of tokens to be minted via taToken price
-        // Current tbDai price = (((cDai X cPrice)-(aSupply X taPrice)) / bSupply)
-        // where: cDai = How much cDai we hold in the protocol
-        // cPrice = cDai / Dai price
+        // Current tbDai price = ((aDai-(aSupply X taPrice)) / bSupply)
+        // where: aDai = How much aDai we hold in the protocol
         // aSupply = Total number of taDai in protocol
         // taPrice = taDai / Dai price
-        // bSupply = Total number of tbDai in protocol (minimum 1 to avoid divide by 0?)
+        // bSupply = Total number of tbDai in protocol
         uint256 totTrBValue;
 
         uint256 totBSupply = IERC20(trancheAddresses[_trancheNum].BTrancheAddress).totalSupply();
@@ -329,22 +341,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      */
     function buyTrancheAToken(uint256 _trancheNum, uint256 _amount) external payable locked {
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
-        /*if (trancheAddresses[_trancheNum].buyerCoinAddress == ETH_ADDR){
-            _amount = msg.value;
-            //Transfer ETH from msg.sender to protocol;
-            TransferETHHelper.safeTransferETH(address(this), _amount);
-            // transfer ETH to Aave receiving aEth
-            //address _market, address _tokenAddr, uint256 _amount
-            aaveDeposit(trancheAddresses[_trancheNum].lendingPoolAddressProvider, ETH_ADDR, _amount);
-        } else {
-            // check approve
-            require(IERC20(trancheAddresses[_trancheNum].buyerCoinAddress).allowance(msg.sender, address(this)) >= _amount, "JCompound: allowance failed buying tranche A");
-            //Transfer DAI from msg.sender to protocol;
-            SafeERC20.safeTransferFrom(IERC20(trancheAddresses[_trancheNum].buyerCoinAddress), msg.sender, address(this), _amount);
-            // transfer DAI to Coompound receiving cDai
-            aaveDeposit(trancheAddresses[_trancheNum].lendingPoolAddressProvider, trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
-        }*/
-        aaveDeposit(trancheAddresses[_trancheNum].lendingPoolAddressProvider, trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
+        aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
         uint256 newAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
         setTrancheAExchangeRate(_trancheNum);
         uint256 taAmount;
@@ -366,44 +363,23 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _amount amount of stable coins sent by buyer
      */
     function redeemTrancheAToken(uint256 _trancheNum, uint256 _amount) external locked {
-        require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "JCompound: redeem timeout not expired on tranche B");
+        require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "AProtocol: redeem timeout not expired on tranche B");
         // check approve
-        require(IERC20(trancheAddresses[_trancheNum].ATrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JCompound: allowance failed redeeming tranche A");
+        require(IERC20(trancheAddresses[_trancheNum].ATrancheAddress).allowance(msg.sender, address(this)) >= _amount, "AProtocol: allowance failed redeeming tranche A");
         //Transfer DAI from msg.sender to protocol;
         SafeERC20.safeTransferFrom(IERC20(trancheAddresses[_trancheNum].ATrancheAddress), msg.sender, address(this), _amount);
 
-        uint256 oldBal;
-        uint256 diffBal;
-        uint256 userAmount;
-        uint256 feesAmount;
         setTrancheAExchangeRate(_trancheNum);
         uint256 taAmount = _amount.mul(trancheParameters[_trancheNum].storedTrancheAPrice).div(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals));
-        if (trancheAddresses[_trancheNum].buyerCoinAddress == ETH_ADDR) {
-            // calculate taETH amount via cETH price
-            oldBal = getEthBalance();
-            aaveWithdraw(trancheAddresses[_trancheNum].lendingPoolAddressProvider, ETH_ADDR, _amount);
-            //newBal = getEthBalance();
-            diffBal = getEthBalance().sub(oldBal);
-            userAmount = diffBal.mul(trancheParameters[_trancheNum].redemptionPercentage).div(10000);
-            TransferETHHelper.safeTransferETH(msg.sender, userAmount);
-            if (diffBal != userAmount) {
-                // transfer fees to JFeesCollector
-                feesAmount = diffBal.sub(userAmount);
-                TransferETHHelper.safeTransferETH(feesCollectorAddress, feesAmount);
-            }   
-        } else {
-            // calculate taToken amount via cToken price
-            oldBal = getTokenBalance(trancheAddresses[_trancheNum].buyerCoinAddress);
-            aaveWithdraw(trancheAddresses[_trancheNum].lendingPoolAddressProvider, trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
-            diffBal = getTokenBalance(trancheAddresses[_trancheNum].buyerCoinAddress).sub(oldBal);
-            userAmount = diffBal.mul(trancheParameters[_trancheNum].redemptionPercentage).div(10000);
-            SafeERC20.safeTransfer(IERC20(trancheAddresses[_trancheNum].buyerCoinAddress), msg.sender, userAmount);
-            if (diffBal != userAmount) {
-                // transfer fees to JFeesCollector
-                feesAmount = diffBal.sub(userAmount);
-                SafeERC20.safeTransfer(IERC20(trancheAddresses[_trancheNum].buyerCoinAddress), feesCollectorAddress, feesAmount);
-            }
-        }
+        // not sure about this
+        uint256 taTotAmount = getTrAValue(_trancheNum);
+        if (taAmount > taTotAmount)
+            taAmount = taTotAmount;
+
+        uint256 userAmount = taAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(10000);
+        aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, userAmount, msg.sender);
+        uint256 feesAmount = taAmount.sub(userAmount);
+        aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, feesAmount, feesCollectorAddress);
         
         IJTrancheTokens(trancheAddresses[_trancheNum].ATrancheAddress).burn(_amount);
         lastActivity[msg.sender] = block.number;
@@ -417,25 +393,12 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _amount amount of stable coins sent by buyer
      */
     function buyTrancheBToken(uint256 _trancheNum, uint256 _amount) external payable locked {
-        uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
         // refresh value for tranche A
         setTrancheAExchangeRate(_trancheNum);
         // get tranche B exchange rate
         uint256 tbAmount = _amount.mul(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals)).div(getTrancheBExchangeRate(_trancheNum, _amount));
-        /*if (trancheAddresses[_trancheNum].buyerCoinAddress == ETH_ADDR) {
-            _amount = msg.value;
-            TransferETHHelper.safeTransferETH(address(this), _amount);
-            // transfer ETH to Coompound receiving cETH
-            aaveDeposit(trancheAddresses[_trancheNum].lendingPoolAddressProvider, ETH_ADDR, _amount);
-        } else {
-            // check approve
-            require(IERC20(trancheAddresses[_trancheNum].buyerCoinAddress).allowance(msg.sender, address(this)) >= _amount, "JCompound: allowance failed buying tranche B");
-            //Transfer DAI from msg.sender to protocol;
-            SafeERC20.safeTransferFrom(IERC20(trancheAddresses[_trancheNum].buyerCoinAddress), msg.sender, address(this), _amount);
-            // transfer DAI to Couompound receiving cDai
-            aaveDeposit(trancheAddresses[_trancheNum].lendingPoolAddressProvider, trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
-        }*/
-        aaveDeposit(trancheAddresses[_trancheNum].lendingPoolAddressProvider, trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
+        uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
+        aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
         uint256 newAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
         if (newAaveTokenBalance > prevAaveTokenBalance) {
             //Mint trancheB tokens and send them to msg.sender;
@@ -453,48 +416,26 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _amount amount of stable coins sent by buyer
      */
     function redeemTrancheBToken(uint256 _trancheNum, uint256 _amount) external locked {
-        require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "JCompound: redeem timeout not expired on tranche B");
+        require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "AProtocol: redeem timeout not expired on tranche B");
         // check approve
-        require(IERC20(trancheAddresses[_trancheNum].BTrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JCompound: allowance failed redeeming tranche B");
+        require(IERC20(trancheAddresses[_trancheNum].BTrancheAddress).allowance(msg.sender, address(this)) >= _amount, "AProtocol: allowance failed redeeming tranche B");
         //Transfer DAI from msg.sender to protocol;
         SafeERC20.safeTransferFrom(IERC20(trancheAddresses[_trancheNum].BTrancheAddress), msg.sender, address(this), _amount);
 
-        uint256 oldBal;
-        uint256 diffBal;
-        uint256 userAmount;
-        uint256 feesAmount;
         // update tranche A price
         setTrancheAExchangeRate(_trancheNum);
         // get tranche B exchange rate
         uint256 tbAmount = _amount.mul(getTrancheBExchangeRate(_trancheNum, 0)).div(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals));
-        if (trancheAddresses[_trancheNum].buyerCoinAddress == address(0)){
-            // calculate tbETH amount via cETH price
-            oldBal = getEthBalance();
-            aaveWithdraw(trancheAddresses[_trancheNum].lendingPoolAddressProvider, ETH_ADDR, _amount);
-            //withdrawEthFromAave(_trancheNum, _amount);
-            diffBal = getEthBalance().sub(oldBal);
-            userAmount = diffBal.mul(trancheParameters[_trancheNum].redemptionPercentage).div(10000);
-            TransferETHHelper.safeTransferETH(msg.sender, userAmount);
-            if (diffBal != userAmount) {
-                // transfer fees to JFeesCollector
-                feesAmount = diffBal.sub(userAmount);
-                TransferETHHelper.safeTransferETH(feesCollectorAddress, feesAmount);
-            }   
-        } else {
-            // calculate taToken amount via cToken price
-            oldBal = getTokenBalance(trancheAddresses[_trancheNum].buyerCoinAddress);
-            //withdrawErc20FromAave(_trancheNum, _amount);
-            aaveWithdraw(trancheAddresses[_trancheNum].lendingPoolAddressProvider, trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
-            diffBal = getTokenBalance(trancheAddresses[_trancheNum].buyerCoinAddress);
-            userAmount = diffBal.mul(trancheParameters[_trancheNum].redemptionPercentage).div(10000);
-            SafeERC20.safeTransfer(IERC20(trancheAddresses[_trancheNum].buyerCoinAddress), msg.sender, userAmount);
-            if (diffBal != userAmount) {
-                // transfer fees to JFeesCollector
-                feesAmount = diffBal.sub(userAmount);
-                SafeERC20.safeTransfer(IERC20(trancheAddresses[_trancheNum].buyerCoinAddress), feesCollectorAddress, feesAmount);
-            }   
-        }
-        
+        // not sure about this
+        uint256 tbTotAmount = getTrBValue(_trancheNum);
+        if (tbAmount > tbTotAmount)
+            tbAmount = tbTotAmount;
+
+        uint256 userAmount = tbAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(10000);
+        aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, userAmount, msg.sender);
+        uint256 feesAmount = tbAmount.sub(userAmount);
+        aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, feesAmount, feesCollectorAddress);
+
         IJTrancheTokens(trancheAddresses[_trancheNum].BTrancheAddress).burn(_amount);
         lastActivity[msg.sender] = block.number;
         emit TrancheBTokenBurned(_trancheNum, msg.sender, _amount, tbAmount);

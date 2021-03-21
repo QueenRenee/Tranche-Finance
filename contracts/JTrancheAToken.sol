@@ -20,9 +20,9 @@ contract JTrancheAToken is OwnableUpgradeSafe, ERC20UpgradeSafe, AccessControlUp
         _setupRole(MINTER_ROLE, msg.sender);
 	}
 
-    function setJCompoundMinter(address _jCompound) external onlyOwner {
+    function setJAaveMinter(address _jAave) external onlyOwner {
 		// Grant the minter role to a specified account
-        _setupRole(MINTER_ROLE, _jCompound);
+        _setupRole(MINTER_ROLE, _jAave);
 	}
 
     /**

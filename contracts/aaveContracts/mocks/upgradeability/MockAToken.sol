@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {AToken} from '@aave/protocol-v2/contracts/protocol/tokenization/AToken.sol';
-import {LendingPool} from '@aave/protocol-v2/contracts/protocol/lendingpool/LendingPool.sol';
+import {AToken} from '../../protocol/tokenization/AToken.sol';
+import {LendingPool} from '../../protocol/lendingpool/LendingPool.sol';
 
 contract MockAToken is AToken {
   constructor(

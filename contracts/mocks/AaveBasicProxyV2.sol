@@ -2,8 +2,11 @@
 pragma solidity ^0.6.0;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "../interfaces/IAaveProtocolDataProvider.sol";
 import "../interfaces/ILendingPool.sol";
+//import '../aaveContracts/interfaces/ILendingPool.sol';
 import "./DSMath.sol";
+//import {DataTypes} from '../aaveContracts/protocol/libraries/types/DataTypes.sol';
 import "../TokenInterface.sol";
 
 
@@ -16,8 +19,8 @@ contract AaveBasicProxyV2 is DSMath {
 
     receive() external virtual payable {}
 
-    function getDataProvider(address _market) internal view returns(ILendingPoolAddressesProvider) {
-        return ILendingPoolAddressesProvider(ILendingPoolAddressesProvider(_market).getAddress(0x0100000000000000000000000000000000000000000000000000000000000000));
+    function getDataProvider(address _market) internal view returns(IAaveProtocolDataProvider) {
+        return IAaveProtocolDataProvider(ILendingPoolAddressesProvider(_market).getAddress(0x0100000000000000000000000000000000000000000000000000000000000000));
     }
 
     /// @notice Approves token contract to pull underlying tokens
@@ -60,7 +63,7 @@ contract AaveBasicProxyV2 is DSMath {
             // if weth, pull to proxy and return ETH to user
             ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, address(this));
             // needs to use balance of in case that amount is -1 for whole debt
-            TokenInterface(WETH_ADDRESS).withdraw(TokenInterface(WETH_ADDRESS).balanceOf(address(this)));
+            TokenInterface(WETH_ADDRESS).withdraw(IERC20(WETH_ADDRESS).balanceOf(address(this)));
             msg.sender.transfer(address(this).balance);
         } else {
             // if not eth send directly to user
@@ -176,6 +179,21 @@ contract AaveBasicProxyV2 is DSMath {
         }
 
         return _token;
+    }
+
+    /**
+     * @dev get every token balance in this contract
+     * @param _tokenContract token contract address
+     */
+    function getTokenBalance(address _tokenContract) public view returns (uint256) {
+        return IERC20(_tokenContract).balanceOf(address(this));
+    }
+
+    /**
+     * @dev get eth balance on this contract
+     */
+    function getEthBalance() public view returns (uint256) {
+        return address(this).balance;
     }
 
 }
