@@ -384,7 +384,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         IJTrancheTokens(trancheAddresses[_trancheNum].ATrancheAddress).burn(_amount);
         lastActivity[msg.sender] = block.number;
         trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
-        emit TrancheATokenBurned(_trancheNum, msg.sender, _amount, taAmount);
+        emit TrancheATokenRedemption(_trancheNum, msg.sender, _amount, userAmount, feesAmount);
     }
 
     /**
@@ -438,7 +438,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
 
         IJTrancheTokens(trancheAddresses[_trancheNum].BTrancheAddress).burn(_amount);
         lastActivity[msg.sender] = block.number;
-        emit TrancheBTokenBurned(_trancheNum, msg.sender, _amount, tbAmount);
+        emit TrancheBTokenRedemption(_trancheNum, msg.sender, _amount, userAmount, feesAmount);
     }
 
     /**
