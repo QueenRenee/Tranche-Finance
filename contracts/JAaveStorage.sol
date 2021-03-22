@@ -16,8 +16,8 @@ contract JAaveStorage is OwnableUpgradeSafe {
     uint16 public constant AAVE_REFERRAL_CODE = 0;
 
     struct TrancheAddresses {
-        address buyerCoinAddress;       // ETH (ETH_ADDR) or DAI
-        address aTokenAddress;          // aETH or aDAI
+        address buyerCoinAddress;       // ETH (ETH_ADDR) or DAI or other
+        address aTokenAddress;          // aETH or aDAI or other aToken
         address ATrancheAddress;
         address BTrancheAddress;
     }
