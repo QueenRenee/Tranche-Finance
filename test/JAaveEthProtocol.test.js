@@ -28,7 +28,7 @@ const JTrancheAToken = contract.fromArtifact('JTrancheAToken');
 const JTrancheBToken = contract.fromArtifact('JTrancheBToken');
 
 const {
-    deployMinimumFactory
+  deployMinimumSetOfContracts
 } = require('./JAaveProtocolFunctions');
 
 describe('JAaveProtocol', function () {
@@ -40,7 +40,7 @@ describe('JAaveProtocol', function () {
 
   //});
 
-  deployMinimumFactory(tokenOwner, factoryOwner, factoryAdmin);
+  deployMinimumSetOfContracts(tokenOwner, factoryOwner, factoryAdmin);
 
   it('send some ETH to CEther', async function () {
     // tx = await web3.eth.sendTransaction({to: this.aToken.address, from: tokenOwner, value: web3.utils.toWei('10', 'ether')});

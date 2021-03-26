@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 /**
  * Created on 2021-02-11
- * @summary: Jibrel Compound Tranche Deployer
+ * @summary: Jibrel Aave Tranche Deployer
  * @author: Jibrel Team
  */
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "./JTrancheAToken.sol";
 import "./JTrancheBToken.sol";
 import "./IJTranchesDeployer.sol";
-import "./IJAave.sol";
 
 contract JTranchesDeployer is OwnableUpgradeSafe, IJTranchesDeployer {
     using SafeMath for uint256;

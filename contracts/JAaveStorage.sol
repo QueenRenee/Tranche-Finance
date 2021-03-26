@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /**
  * Created on 2021-01-16
- * @summary: Jibrel Protocol Storage
+ * @summary: Jibrel Aave Tranches Protocol Storage
  * @author: Jibrel Team
  */
 pragma solidity 0.6.12;
@@ -15,19 +15,21 @@ contract JAaveStorage is OwnableUpgradeSafe {
     address public constant ETH_ADDR = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint16 public constant AAVE_REFERRAL_CODE = 0;
 
+    uint256 public constant PERCENT_DIVIDER = 10000;  // percentage divider
+
     struct TrancheAddresses {
-        address buyerCoinAddress;       // ETH (ETH_ADDR) or DAI or other
+        address buyerCoinAddress;       // ETH (ETH_ADDR) or DAI or other supported tokens
         address aTokenAddress;          // aETH or aDAI or other aToken
         address ATrancheAddress;
         address BTrancheAddress;
     }
 
     struct TrancheParameters {
-        uint256 trancheAFixedPercentage;
+        uint256 trancheAFixedPercentage;    // fixed percentage (i.e. 4% = 0.04 * 10^18 = 40000000000000000)
         uint256 trancheALastActionBlock;
         uint256 storedTrancheAPrice;
         uint256 trancheACurrentRPB;
-        uint16 redemptionPercentage;    // percentage with 2 decimals (divided by 10000, i.e. 95% is 9500)
+        uint16 redemptionPercentage;        // percentage with 2 decimals (divided by 10000, i.e. 95% is 9500)
         uint8 aTokenDecimals;
         uint8 underlyingDecimals;
     }

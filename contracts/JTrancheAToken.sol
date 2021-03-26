@@ -32,7 +32,8 @@ contract JTrancheAToken is OwnableUpgradeSafe, ERC20UpgradeSafe, AccessControlUp
 	 * @param value The amount that will be created.
 	 */
 	function mint(address account, uint256 value) external override {
-		require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
+		require(hasRole(MINTER_ROLE, msg.sender), "JTrancheB: caller is not a minter");
+		require(value > 0, "JTrancheB: value is zero");
         super._mint(account, value);
     }
 
@@ -42,6 +43,7 @@ contract JTrancheAToken is OwnableUpgradeSafe, ERC20UpgradeSafe, AccessControlUp
 	 * @param value The amount that will be burnt.
 	 */
 	function burn(uint256 value) external override {
+		require(value > 0, "JTrancheB: value is zero");
 		super._burn(msg.sender, value);
 	}
 }

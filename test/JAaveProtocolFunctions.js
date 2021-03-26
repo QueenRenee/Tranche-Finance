@@ -41,7 +41,7 @@ const {
   const GAS_PRICE = 27000000000;
   
   
-  function deployMinimumFactory(tokenOwner, factoryOwner, factoryAdmin) {
+  function deployMinimumSetOfContracts(tokenOwner, factoryOwner, factoryAdmin) {
   
     it('deploys DAI mockup', async function () {
       //gasPrice = await web3.eth.getGasPrice();
@@ -385,7 +385,7 @@ const {
   
   
   module.exports = {
-    deployMinimumFactory,
+    deployMinimumSetOfContracts,
     //sendcETHtoProtocol,
     //sendcDAItoProtocol,
     sendDAItoUsers

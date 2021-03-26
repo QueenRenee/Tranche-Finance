@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /**
  * Created on 2021-02-11
- * @summary: Jibrel Aave Tranche Deployer
+ * @summary: Jibrel Aave Tranche Protocol
  * @author: Jibrel Team
  */
 pragma solidity ^0.6.12;
@@ -44,7 +44,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @dev admins modifiers
      */
     modifier onlyAdmins() {
-        require(IJPriceOracle(priceOracleAddress).isAdmin(msg.sender), "Protocol: not an Admin");
+        require(IJPriceOracle(priceOracleAddress).isAdmin(msg.sender), "JAave: not an Admin");
         _;
     }
 
@@ -60,6 +60,21 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
 
     fallback() external payable {}
     receive() external payable {}
+
+    /**
+     * @dev set new addresses for price oracle, fees collector and tranche deployer 
+     * @param _priceOracle price oracle address
+     * @param _feesCollector fees collector contract address
+     * @param _tranchesDepl tranches deployer contract address
+     */
+    function setNewEnvironment(address _priceOracle, 
+            address _feesCollector, 
+            address _tranchesDepl) external onlyOwner{
+        require((_priceOracle != address(0)) && (_feesCollector != address(0)) && (_tranchesDepl != address(0)), "JAave: check addresses");
+        priceOracleAddress = _priceOracle;
+        feesCollectorAddress = _feesCollector;
+        tranchesDeployerAddress = _tranchesDepl;
+    }
 
     /**
      * @dev set how many blocks will be produced per year on the blockchain 
@@ -81,7 +96,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @dev get Aave Pool Address Provider starting from lending pool address provider
      */
     function getDataProvider() public view returns(IAaveProtocolDataProvider) {
-        require(lendingPoolAddressProvider != address(0), "AProtocol: set lending pool address provider");
+        require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
         return IAaveProtocolDataProvider(ILendingPoolAddressesProvider(lendingPoolAddressProvider)
                     .getAddress(0x0100000000000000000000000000000000000000000000000000000000000000));
     }
@@ -90,7 +105,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @dev get Aave all tokens
      */
     function getAllATokens() external view returns(IAaveProtocolDataProvider.TokenData[] memory) {
-        require(lendingPoolAddressProvider != address(0), "AProtocol: set lending pool address provider");
+        require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
         IAaveProtocolDataProvider aaveProtocolDataProvider = getDataProvider();
         return aaveProtocolDataProvider.getAllATokens();
     }
@@ -99,7 +114,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @dev get Aave all reserved tokens
      */
     function getAllReservesTokens() external view returns(IAaveProtocolDataProvider.TokenData[] memory) {
-        require(lendingPoolAddressProvider != address(0), "AProtocol: set lending pool address provider");
+        require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
         IAaveProtocolDataProvider aaveProtocolDataProvider = getDataProvider();
         return aaveProtocolDataProvider.getAllReservesTokens();
     }
@@ -172,6 +187,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _underlyingDec underlying token decimals
      */
     function setDecimals(uint256 _trancheNum, uint8 _aTokenDec, uint8 _underlyingDec) external onlyAdmins {
+        require((_aTokenDec <= 18) && (_underlyingDec <= 18), "JAave: too many decimals");
         trancheParameters[_trancheNum].aTokenDecimals = _aTokenDec;
         trancheParameters[_trancheNum].underlyingDecimals = _underlyingDec;
     }
@@ -202,8 +218,8 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
             uint256 _fixedRpb, 
             uint8 _aTokenDec, 
             uint8 _underlyingDec) external onlyAdmins locked {
-        require(tranchesDeployerAddress != address(0), "AProtocol: set tranche eth deployer");
-        require(lendingPoolAddressProvider != address(0), "AProtocol: set lending pool address provider");
+        require(tranchesDeployerAddress != address(0), "JAave: set tranche eth deployer");
+        require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
 
         trancheAddresses[tranchePairCounter].buyerCoinAddress = _buyerCoinAddress;
         trancheAddresses[tranchePairCounter].aTokenAddress = _aTokenAddress;
@@ -363,9 +379,9 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _amount amount of stable coins sent by buyer
      */
     function redeemTrancheAToken(uint256 _trancheNum, uint256 _amount) external locked {
-        require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "AProtocol: redeem timeout not expired on tranche B");
+        require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "JAave: redeem timeout not expired on tranche A");
         // check approve
-        require(IERC20(trancheAddresses[_trancheNum].ATrancheAddress).allowance(msg.sender, address(this)) >= _amount, "AProtocol: allowance failed redeeming tranche A");
+        require(IERC20(trancheAddresses[_trancheNum].ATrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed redeeming tranche A");
         //Transfer DAI from msg.sender to protocol;
         SafeERC20.safeTransferFrom(IERC20(trancheAddresses[_trancheNum].ATrancheAddress), msg.sender, address(this), _amount);
 
@@ -376,7 +392,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         if (taAmount > taTotAmount)
             taAmount = taTotAmount;
 
-        uint256 userAmount = taAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(10000);
+        uint256 userAmount = taAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(PERCENT_DIVIDER);
         aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, userAmount, msg.sender);
         uint256 feesAmount = taAmount.sub(userAmount);
         aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, feesAmount, feesCollectorAddress);
@@ -416,9 +432,9 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _amount amount of stable coins sent by buyer
      */
     function redeemTrancheBToken(uint256 _trancheNum, uint256 _amount) external locked {
-        require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "AProtocol: redeem timeout not expired on tranche B");
+        require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "JAave: redeem timeout not expired on tranche B");
         // check approve
-        require(IERC20(trancheAddresses[_trancheNum].BTrancheAddress).allowance(msg.sender, address(this)) >= _amount, "AProtocol: allowance failed redeeming tranche B");
+        require(IERC20(trancheAddresses[_trancheNum].BTrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed redeeming tranche B");
         //Transfer DAI from msg.sender to protocol;
         SafeERC20.safeTransferFrom(IERC20(trancheAddresses[_trancheNum].BTrancheAddress), msg.sender, address(this), _amount);
 
@@ -431,7 +447,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         if (tbAmount > tbTotAmount)
             tbAmount = tbTotAmount;
 
-        uint256 userAmount = tbAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(10000);
+        uint256 userAmount = tbAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(PERCENT_DIVIDER);
         aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, userAmount, msg.sender);
         uint256 feesAmount = tbAmount.sub(userAmount);
         aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, feesAmount, feesCollectorAddress);
@@ -457,7 +473,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
     }
 
     /**
-     * @dev transfer tokens in this contract to owner address
+     * @dev transfer tokens in this contract to fees collector contract
      * @param _tokenContract token contract address
      * @param _amount token amount to be transferred 
      */
@@ -466,7 +482,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
     }
 
     /**
-     * @dev transfer ethers in this contract to owner address
+     * @dev transfer ethers in this contract to fees collector contract
      * @param _amount ethers amount to be transferred 
      */
     function withdrawEthToOwner(uint256 _amount) external onlyAdmins {
