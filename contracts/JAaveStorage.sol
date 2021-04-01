@@ -39,7 +39,7 @@ contract JAaveStorage is OwnableUpgradeSafe {
     address public tranchesDeployerAddress;
     address public lendingPoolAddressProvider;
 
-    uint256 public tranchePairCounter;
+    uint256 public tranchePairsCounter;
     uint256 public totalBlocksPerYear; 
     uint32 public redeemTimeout;
 

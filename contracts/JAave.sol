@@ -221,25 +221,25 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         require(tranchesDeployerAddress != address(0), "JAave: set tranche eth deployer");
         require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
 
-        trancheAddresses[tranchePairCounter].buyerCoinAddress = _buyerCoinAddress;
-        trancheAddresses[tranchePairCounter].aTokenAddress = _aTokenAddress;
-        trancheAddresses[tranchePairCounter].ATrancheAddress = 
+        trancheAddresses[tranchePairsCounter].buyerCoinAddress = _buyerCoinAddress;
+        trancheAddresses[tranchePairsCounter].aTokenAddress = _aTokenAddress;
+        trancheAddresses[tranchePairsCounter].ATrancheAddress = 
                 IJTranchesDeployer(tranchesDeployerAddress).deployNewTrancheATokens(_nameA, _symbolA, msg.sender);
-        trancheAddresses[tranchePairCounter].BTrancheAddress = 
+        trancheAddresses[tranchePairsCounter].BTrancheAddress = 
                 IJTranchesDeployer(tranchesDeployerAddress).deployNewTrancheBTokens(_nameB, _symbolB, msg.sender); 
         
 
-        trancheParameters[tranchePairCounter].aTokenDecimals = _aTokenDec;
-        trancheParameters[tranchePairCounter].underlyingDecimals = _underlyingDec;
-        trancheParameters[tranchePairCounter].trancheAFixedPercentage = _fixedRpb;
-        trancheParameters[tranchePairCounter].trancheALastActionBlock = block.number;
-        trancheParameters[tranchePairCounter].storedTrancheAPrice = uint256(1e18);
+        trancheParameters[tranchePairsCounter].aTokenDecimals = _aTokenDec;
+        trancheParameters[tranchePairsCounter].underlyingDecimals = _underlyingDec;
+        trancheParameters[tranchePairsCounter].trancheAFixedPercentage = _fixedRpb;
+        trancheParameters[tranchePairsCounter].trancheALastActionBlock = block.number;
+        trancheParameters[tranchePairsCounter].storedTrancheAPrice = uint256(1e18);
 
-        trancheParameters[tranchePairCounter].redemptionPercentage = 9950;  //default value 99.5%
+        trancheParameters[tranchePairsCounter].redemptionPercentage = 9950;  //default value 99.5%
 
-        emit TrancheAddedToProtocol(tranchePairCounter, trancheAddresses[tranchePairCounter].ATrancheAddress, trancheAddresses[tranchePairCounter].BTrancheAddress);
+        emit TrancheAddedToProtocol(tranchePairsCounter, trancheAddresses[tranchePairsCounter].ATrancheAddress, trancheAddresses[tranchePairsCounter].BTrancheAddress);
 
-        tranchePairCounter = tranchePairCounter.add(1);
+        tranchePairsCounter = tranchePairsCounter.add(1);
     } 
 
     /**
