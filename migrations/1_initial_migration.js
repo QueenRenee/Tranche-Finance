@@ -11,7 +11,6 @@ var JTranchesDeployer = artifacts.require('JTranchesDeployer');
 var JTrancheAToken = artifacts.require('JTrancheAToken');
 var JTrancheBToken = artifacts.require('JTrancheBToken');
 
-
 module.exports = async (deployer, network, accounts) => {
   //const MYERC20_TOKEN_SUPPLY = 5000000;
   //const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -42,14 +41,14 @@ module.exports = async (deployer, network, accounts) => {
 
     await JTDeployer.setJAaveAddress(JAinstance.address, { from: factoryOwner });
 
-    await JAinstance.addTrancheToProtocol(ETH_ADDRESS, aWETH_Address, "jEthTrancheAToken", "JEA", "jEthTrancheBToken", "JEB",  web3.utils.toWei("0.04", "ether"), 18, 18, { from: factoryOwner });
+    await JAinstance.addTrancheToProtocol(ETH_ADDRESS, aWETH_Address, "jEthTrancheAToken", "JEA", "jEthTrancheBToken", "JEB", web3.utils.toWei("0.04", "ether"), 18, 18, { from: factoryOwner });
     trParams = await JAinstance.trancheAddresses(0);
     let EthTrA = await JTrancheAToken.at(trParams.ATrancheAddress);
     console.log("Eth Tranche A Token Address: " + EthTrA.address);
     let EthTrB = await JTrancheBToken.at(trParams.BTrancheAddress);
     console.log("Eth Tranche B Token Address: " + EthTrB.address);
 
-    await JAinstance.addTrancheToProtocol(DAI_ADDRESS, aDAI_Address, "jDaiTrancheAToken", "JDA", "jDaiTrancheBToken", "JDB",  web3.utils.toWei("0.03", "ether"), 18, 18, { from: factoryOwner });
+    await JAinstance.addTrancheToProtocol(DAI_ADDRESS, aDAI_Address, "jDaiTrancheAToken", "JDA", "jDaiTrancheBToken", "JDB", web3.utils.toWei("0.03", "ether"), 18, 18, { from: factoryOwner });
     trParams = await JAinstance.trancheAddresses(1);
     let DaiTrA = await JTrancheAToken.at(trParams.ATrancheAddress);
     console.log("Eth Tranche A Token Address: " + DaiTrA.address);
@@ -61,7 +60,6 @@ module.exports = async (deployer, network, accounts) => {
     const accounts = await web3.eth.getAccounts();
     const factoryOwner = accounts[0];
     if (IS_UPGRADE == 'true') {
-
       console.log('contracts are upgraded');
     } else {
       // deployed new contract
