@@ -56,7 +56,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log("Eth Tranche B Token Address: " + DaiTrB.address);
 
   } else if (network == "kovan") {
-    let { FEE_COLLECTOR_ADDRESS, PRICE_ORACLE_ADDRESS, IS_UPGRADE, AAVEPOOLADDRESSPROVIDER, AWETH_ADDRESS, ADAI_ADDRESS, ETH_ADDRESS, DAI_ADDRESS } = process.env;
+    let { FEE_COLLECTOR_ADDRESS, PRICE_ORACLE_ADDRESS, IS_UPGRADE, AAVE_POOL, AWETH_ADDRESS, ADAI_ADDRESS, DAI_ADDRESS } = process.env;
     const accounts = await web3.eth.getAccounts();
     const factoryOwner = accounts[0];
     if (IS_UPGRADE == 'true') {
@@ -76,13 +76,13 @@ module.exports = async (deployer, network, accounts) => {
       await aaveDeployer.setJAaveAddress(JAaveInstance.address, { from: factoryOwner });
       console.log('compound deployer 1');
 
-      await JAaveInstance.setAavePoolAddressProvider(AAVEPOOLADDRESSPROVIDER, { from: factoryOwner });
+      await JAaveInstance.setAavePoolAddressProvider(AAVE_POOL, { from: factoryOwner });
       console.log('compound deployer 2');
 
-      await JAaveInstance.addTrancheToProtocol(DAI_ADDRESS, ADAI_ADDRESS, "JCD tranche A", "JCDA", "JCD tranche A", "JCDB", web3.utils.toWei("0.03", "ether"), 18, 18, { from: factoryOwner });
+      await JAaveInstance.addTrancheToProtocol(DAI_ADDRESS, ADAI_ADDRESS, "aDAI tranche A", "ADAIA", "cDAI tranche B", "ADAIB", web3.utils.toWei("0.03", "ether"), 18, 18, { from: factoryOwner });
       console.log('compound deployer 3');
 
-      await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "JCE tranche A", "JCEA", "JCE tranche A", "JCEB", web3.utils.toWei("0.04", "ether"), 18, 18, { from: factoryOwner });
+      await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "aETH tranche A", "AETHA", "aETH tranche B", "AETHB", web3.utils.toWei("0.04", "ether"), 18, 18, { from: factoryOwner });
       console.log('compound deployer 4');
 
       console.log(`JAave deployed at: ${JAaveInstance.address}`);
