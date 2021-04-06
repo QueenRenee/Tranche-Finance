@@ -119,6 +119,22 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         return aaveProtocolDataProvider.getAllReservesTokens();
     }
 
+    /**
+     * @dev get Aave reserve Data for an asset
+     * liquidityRate is the return percentage for that asset (multiply by 10^27)
+     */
+    function getAaveReserveData(uint256 _trancheNum) external view returns(uint256 availableLiquidity, uint256 totalStableDebt,
+            uint256 totalVariableDebt, uint256 liquidityRate, uint256 variableBorrowRate, uint256 stableBorrowRate,
+            uint256 averageStableBorrowRate, uint256 liquidityIndex, uint256 variableBorrowIndex,
+            uint40 lastUpdateTimestamp) {
+        require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
+        IAaveProtocolDataProvider aaveProtocolDataProvider = getDataProvider();
+        address asset = trancheAddresses[_trancheNum].buyerCoinAddress;
+        if (trancheAddresses[_trancheNum].buyerCoinAddress == ETH_ADDR)
+            asset = WETH_ADDRESS;
+        return aaveProtocolDataProvider.getReserveData(asset);
+    }
+
     function getLendingPool() external view returns (address) {
         return ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
     }
@@ -362,7 +378,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
         if (_tokenAddr == ETH_ADDR) {
-            require(msg.value == _amount);
+            require(msg.value == _amount, "JAave: msg.value not equal to amount");
             TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
@@ -432,7 +448,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
         if (_tokenAddr == ETH_ADDR) {
-            require(msg.value == _amount);
+            require(msg.value == _amount, "JAave: msg.value not equal to amount");
             TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {

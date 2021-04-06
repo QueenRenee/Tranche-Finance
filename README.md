@@ -48,11 +48,11 @@ Limit is 24 KiB for single contract
     <tbody>
         <tr>
             <td>JAave</td>
-            <td><code>15.18 KiB</code></td>
+            <td><code>16.15 KiB</code></td>
         </tr>
         <tr>
             <td>JAaveStorage</td>
-            <td><code>1.70 KiB</code></td>
+            <td><code>1.59 KiB</code></td>
         </tr>
         <tr>
             <td>JTrancheAToken</td>
