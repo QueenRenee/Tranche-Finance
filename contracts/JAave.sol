@@ -122,14 +122,14 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
     function getLendingPool() external view returns (address) {
         return ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
     }
-
+/*
     /**
      *  @notice User deposits tokens to the Aave protocol
      *  @dev User needs to approve the DSProxy to pull the _tokenAddr tokens
      *  @param _tokenAddr The address of the token to be deposited
      *  @param _amount Amount of tokens to be deposited
      */
-    function aaveDeposit(address _tokenAddr, uint256 _amount) public payable {
+/*    function aaveDeposit(address _tokenAddr, uint256 _amount) public payable {
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
 
         if (_tokenAddr == ETH_ADDR) {
@@ -143,7 +143,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         SafeERC20.safeApprove(IERC20(_tokenAddr), lendingPool, _amount);
         ILendingPool(lendingPool).deposit(_tokenAddr, _amount, address(this), AAVE_REFERRAL_CODE);
     }
-
+*/
     function changeToWeth(address _token) private pure returns(address) {
         if (_token == ETH_ADDR) {
             return WETH_ADDRESS;
@@ -157,7 +157,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _amount Amount of tokens to be withdrawn
      * @param _to receiver address
      */ 
-    function aaveWithdraw(address _tokenAddr, uint256 _amount, address _to) public {
+    function aaveWithdraw(address _tokenAddr, uint256 _amount, address _to) internal {
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         _tokenAddr = changeToWeth(_tokenAddr);
 
@@ -357,7 +357,21 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      */
     function buyTrancheAToken(uint256 _trancheNum, uint256 _amount) external payable locked {
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
-        aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
+
+        //aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
+        address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
+        address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
+        if (_tokenAddr == ETH_ADDR) {
+            require(msg.value == _amount);
+            TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
+            _tokenAddr = WETH_ADDRESS;
+        } else {
+            SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), _amount);
+        }
+
+        SafeERC20.safeApprove(IERC20(_tokenAddr), lendingPool, _amount);
+        ILendingPool(lendingPool).deposit(_tokenAddr, _amount, address(this), AAVE_REFERRAL_CODE);
+        
         uint256 newAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
         setTrancheAExchangeRate(_trancheNum);
         uint256 taAmount;
@@ -414,7 +428,20 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         // get tranche B exchange rate
         uint256 tbAmount = _amount.mul(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals)).div(getTrancheBExchangeRate(_trancheNum, _amount));
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
-        aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
+        //aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
+        address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
+        address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
+        if (_tokenAddr == ETH_ADDR) {
+            require(msg.value == _amount);
+            TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
+            _tokenAddr = WETH_ADDRESS;
+        } else {
+            SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), _amount);
+        }
+
+        SafeERC20.safeApprove(IERC20(_tokenAddr), lendingPool, _amount);
+        ILendingPool(lendingPool).deposit(_tokenAddr, _amount, address(this), AAVE_REFERRAL_CODE);
+
         uint256 newAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
         if (newAaveTokenBalance > prevAaveTokenBalance) {
             //Mint trancheB tokens and send them to msg.sender;
