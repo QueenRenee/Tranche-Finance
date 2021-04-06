@@ -79,10 +79,10 @@ module.exports = async (deployer, network, accounts) => {
       await JAaveInstance.setAavePoolAddressProvider(AAVE_POOL, { from: factoryOwner });
       console.log('compound deployer 2');
 
-      await JAaveInstance.addTrancheToProtocol(DAI_ADDRESS, ADAI_ADDRESS, "aDAI tranche A", "ADAIA", "aDAI tranche B", "ADAIB", web3.utils.toWei("0.03", "ether"), 18, 18, { from: factoryOwner });
+      await JAaveInstance.addTrancheToProtocol(DAI_ADDRESS, ADAI_ADDRESS, "Tranche A - AAVE DAI", "AADAI", "Tranche B - AAVE DAI", "BADAI", web3.utils.toWei("0.03", "ether"), 18, 18, { from: factoryOwner });
       console.log('compound deployer 3');
 
-      await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "aETH tranche A", "AETHA", "aETH tranche B", "AETHB", web3.utils.toWei("0.04", "ether"), 18, 18, { from: factoryOwner });
+      await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "Tranche A - AAVE ETH", "AAETH", "Tranche A - AAVE ETH", "BAETH", web3.utils.toWei("0.04", "ether"), 18, 18, { from: factoryOwner });
       console.log('compound deployer 4');
 
       console.log(`JAave deployed at: ${JAaveInstance.address}`);
