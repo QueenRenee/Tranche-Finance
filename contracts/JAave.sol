@@ -7,7 +7,7 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2; // needed for getAllAtokens and getAllReservesTokens
 
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 import "./interfaces/IAaveProtocolDataProvider.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/ILendingPoolAddressesProvider.sol";
@@ -20,8 +20,8 @@ import "./IJAave.sol";
 import "./TokenInterface.sol";
 
 
-contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
-    using SafeMath for uint256;
+contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
+    using SafeMathUpgradeable for uint256;
 
     /**
      * @dev contract initializer
@@ -32,7 +32,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
     function initialize(address _priceOracle, 
             address _feesCollector, 
             address _tranchesDepl) public initializer() {
-        OwnableUpgradeSafe.__Ownable_init();
+        OwnableUpgradeable.__Ownable_init();
         priceOracleAddress = _priceOracle;
         feesCollectorAddress = _feesCollector;
         tranchesDeployerAddress = _tranchesDepl;
@@ -153,10 +153,10 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
             TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
-            SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), _amount);
+            SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), _amount);
         }
 
-        SafeERC20.safeApprove(IERC20(_tokenAddr), lendingPool, _amount);
+        SafeERC20Upgradeable.safeApprove(IERC20Upgradeable(_tokenAddr), lendingPool, _amount);
         ILendingPool(lendingPool).deposit(_tokenAddr, _amount, address(this), AAVE_REFERRAL_CODE);
     }
 */
@@ -185,7 +185,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
             // if weth, pull to proxy and return ETH to user
             ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, address(this));
             // from Weth to Eth, all the Weth balance --> no Weth in contract
-            TokenInterface(WETH_ADDRESS).withdraw(IERC20(WETH_ADDRESS).balanceOf(address(this)));
+            TokenInterface(WETH_ADDRESS).withdraw(IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this)));
             // get new eth balance
             newBalance = getEthBalance();
             if (newBalance > oldBalance)
@@ -306,7 +306,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @return tranche A value
      */
     function getTrAValue(uint256 _trancheNum) public view returns (uint256) {
-        uint256 totASupply = IERC20(trancheAddresses[_trancheNum].ATrancheAddress).totalSupply();
+        uint256 totASupply = IERC20Upgradeable(trancheAddresses[_trancheNum].ATrancheAddress).totalSupply();
         return totASupply.mul(getTrancheAExchangeRate(_trancheNum)).div(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals));
     }
 
@@ -348,7 +348,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
         // bSupply = Total number of tbDai in protocol
         uint256 totTrBValue;
 
-        uint256 totBSupply = IERC20(trancheAddresses[_trancheNum].BTrancheAddress).totalSupply();
+        uint256 totBSupply = IERC20Upgradeable(trancheAddresses[_trancheNum].BTrancheAddress).totalSupply();
         uint256 newBSupply = totBSupply.add(_newAmount);
 
         uint256 totProtValue = getTotalValue(_trancheNum).add(_newAmount);
@@ -382,10 +382,10 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
             TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
-            SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), _amount);
+            SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), _amount);
         }
 
-        SafeERC20.safeApprove(IERC20(_tokenAddr), lendingPool, _amount);
+        SafeERC20Upgradeable.safeApprove(IERC20Upgradeable(_tokenAddr), lendingPool, _amount);
         ILendingPool(lendingPool).deposit(_tokenAddr, _amount, address(this), AAVE_REFERRAL_CODE);
         
         uint256 newAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
@@ -411,9 +411,9 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
     function redeemTrancheAToken(uint256 _trancheNum, uint256 _amount) external locked {
         require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "JAave: redeem timeout not expired on tranche A");
         // check approve
-        require(IERC20(trancheAddresses[_trancheNum].ATrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed redeeming tranche A");
+        require(IERC20Upgradeable(trancheAddresses[_trancheNum].ATrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed redeeming tranche A");
         //Transfer DAI from msg.sender to protocol;
-        SafeERC20.safeTransferFrom(IERC20(trancheAddresses[_trancheNum].ATrancheAddress), msg.sender, address(this), _amount);
+        SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(trancheAddresses[_trancheNum].ATrancheAddress), msg.sender, address(this), _amount);
 
         setTrancheAExchangeRate(_trancheNum);
         uint256 taAmount = _amount.mul(trancheParameters[_trancheNum].storedTrancheAPrice).div(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals));
@@ -452,10 +452,10 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
             TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
-            SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), _amount);
+            SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), _amount);
         }
 
-        SafeERC20.safeApprove(IERC20(_tokenAddr), lendingPool, _amount);
+        SafeERC20Upgradeable.safeApprove(IERC20Upgradeable(_tokenAddr), lendingPool, _amount);
         ILendingPool(lendingPool).deposit(_tokenAddr, _amount, address(this), AAVE_REFERRAL_CODE);
 
         uint256 newAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
@@ -477,9 +477,9 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
     function redeemTrancheBToken(uint256 _trancheNum, uint256 _amount) external locked {
         require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "JAave: redeem timeout not expired on tranche B");
         // check approve
-        require(IERC20(trancheAddresses[_trancheNum].BTrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed redeeming tranche B");
+        require(IERC20Upgradeable(trancheAddresses[_trancheNum].BTrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed redeeming tranche B");
         //Transfer DAI from msg.sender to protocol;
-        SafeERC20.safeTransferFrom(IERC20(trancheAddresses[_trancheNum].BTrancheAddress), msg.sender, address(this), _amount);
+        SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(trancheAddresses[_trancheNum].BTrancheAddress), msg.sender, address(this), _amount);
 
         // update tranche A price
         setTrancheAExchangeRate(_trancheNum);
@@ -505,7 +505,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _tokenContract token contract address
      */
     function getTokenBalance(address _tokenContract) public view returns (uint256) {
-        return IERC20(_tokenContract).balanceOf(address(this));
+        return IERC20Upgradeable(_tokenContract).balanceOf(address(this));
     }
 
     /**
@@ -521,7 +521,7 @@ contract JAave is OwnableUpgradeSafe, JAaveStorage, IJAave {
      * @param _amount token amount to be transferred 
      */
     function transferTokenToOwner(address _tokenContract, uint256 _amount) external onlyAdmins {
-        SafeERC20.safeTransfer(IERC20(_tokenContract), feesCollectorAddress, _amount);
+        SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_tokenContract), feesCollectorAddress, _amount);
     }
 
     /**

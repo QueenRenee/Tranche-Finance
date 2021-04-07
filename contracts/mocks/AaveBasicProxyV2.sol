@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 import "../interfaces/IAaveProtocolDataProvider.sol";
 import "../interfaces/ILendingPool.sol";
 //import '../aaveContracts/interfaces/ILendingPool.sol';
@@ -28,7 +28,7 @@ contract AaveBasicProxyV2 is DSMath {
     /// @param _caller Address which will gain the approval
     function approveToken(address _tokenAddr, address _caller) internal {
         if (_tokenAddr != ETH_ADDR) {
-            SafeERC20.safeApprove(IERC20(_tokenAddr), _caller, uint256(-1));
+            SafeERC20Upgradeable.safeApprove(IERC20Upgradeable(_tokenAddr), _caller, uint256(-1));
         }
     }
 
@@ -44,7 +44,7 @@ contract AaveBasicProxyV2 is DSMath {
             TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
-            SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), _amount);
+            SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), _amount);
         }
 
         approveToken(_tokenAddr, lendingPool);
@@ -63,7 +63,7 @@ contract AaveBasicProxyV2 is DSMath {
             // if weth, pull to proxy and return ETH to user
             ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, address(this));
             // needs to use balance of in case that amount is -1 for whole debt
-            TokenInterface(WETH_ADDRESS).withdraw(IERC20(WETH_ADDRESS).balanceOf(address(this)));
+            TokenInterface(WETH_ADDRESS).withdraw(IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this)));
             msg.sender.transfer(address(this).balance);
         } else {
             // if not eth send directly to user
@@ -102,8 +102,8 @@ contract AaveBasicProxyV2 is DSMath {
         if (_tokenAddr == WETH_ADDRESS) {
             TokenInterface(WETH_ADDRESS).deposit{value: msg.value}();
         } else {
-            uint amountToPull = min(_amount, IERC20(_tokenAddr).balanceOf(msg.sender));
-            SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), amountToPull);
+            uint amountToPull = min(_amount, IERC20Upgradeable(_tokenAddr).balanceOf(msg.sender));
+            SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), amountToPull);
         }
 
         approveToken(_tokenAddr, lendingPool);
@@ -111,7 +111,7 @@ contract AaveBasicProxyV2 is DSMath {
 
         if (_tokenAddr == WETH_ADDRESS) {
             // Pull if we have any eth leftover
-            TokenInterface(WETH_ADDRESS).withdraw(IERC20(WETH_ADDRESS).balanceOf(address(this)));
+            TokenInterface(WETH_ADDRESS).withdraw(IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this)));
             _tokenAddr = ETH_ADDR;
         }
 
@@ -129,8 +129,8 @@ contract AaveBasicProxyV2 is DSMath {
         if (_tokenAddr == WETH_ADDRESS) {
             TokenInterface(WETH_ADDRESS).deposit{value: msg.value}();
         } else {
-            uint amountToPull = min(_amount, IERC20(_tokenAddr).allowance(msg.sender, address(this)));
-            SafeERC20.safeTransferFrom(IERC20(_tokenAddr), msg.sender, address(this), amountToPull);
+            uint amountToPull = min(_amount, IERC20Upgradeable(_tokenAddr).allowance(msg.sender, address(this)));
+            SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), amountToPull);
         }
 
         approveToken(_tokenAddr, lendingPool);
@@ -149,11 +149,11 @@ contract AaveBasicProxyV2 is DSMath {
     /// @notice Helper method to withdraw tokens
     /// @param _tokenAddr Address of the token to be withdrawn
     function withdrawTokens(address _tokenAddr) public {
-        uint256 amount = _tokenAddr == ETH_ADDR ? address(this).balance : IERC20(_tokenAddr).balanceOf(address(this));
+        uint256 amount = _tokenAddr == ETH_ADDR ? address(this).balance : IERC20Upgradeable(_tokenAddr).balanceOf(address(this));
 
         if (amount > 0) {
             if (_tokenAddr != ETH_ADDR) {
-                SafeERC20.safeTransfer(IERC20(_tokenAddr), msg.sender, amount);
+                SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_tokenAddr), msg.sender, amount);
             } else {
                 msg.sender.transfer(amount);
             }
@@ -186,7 +186,7 @@ contract AaveBasicProxyV2 is DSMath {
      * @param _tokenContract token contract address
      */
     function getTokenBalance(address _tokenContract) public view returns (uint256) {
-        return IERC20(_tokenContract).balanceOf(address(this));
+        return IERC20Upgradeable(_tokenContract).balanceOf(address(this));
     }
 
     /**
