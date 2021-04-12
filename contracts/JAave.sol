@@ -36,7 +36,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         priceOracleAddress = _priceOracle;
         feesCollectorAddress = _feesCollector;
         tranchesDeployerAddress = _tranchesDepl;
-        redeemTimeout = 10; //default
+        redeemTimeout = 3; //default
         totalBlocksPerYear = 2372500;
     }
 
@@ -199,12 +199,10 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     /**
      * @dev check if a cToken is allowed or not
      * @param _trancheNum tranche number
-     * @param _aTokenDec cToken decimals
      * @param _underlyingDec underlying token decimals
      */
-    function setDecimals(uint256 _trancheNum, uint8 _aTokenDec, uint8 _underlyingDec) external onlyAdmins {
-        require((_aTokenDec <= 18) && (_underlyingDec <= 18), "JAave: too many decimals");
-        trancheParameters[_trancheNum].aTokenDecimals = _aTokenDec;
+    function setDecimals(uint256 _trancheNum, uint8 _underlyingDec) external onlyAdmins {
+        require(_underlyingDec <= 18, "JAave: too many decimals");
         trancheParameters[_trancheNum].underlyingDecimals = _underlyingDec;
     }
 
@@ -225,6 +223,17 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         redeemTimeout = _blockNum;
     }
 
+    /**
+     * @dev set tranche redemption percentage scaled by 1e18
+     * @param _trancheNum tranche number
+     * @param _newTrAPercentage new tranche A RPB
+     */
+    function setTrancheAFixedPercentage(uint256 _trancheNum, uint256 _newTrAPercentage) external onlyAdmins {
+        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
+        trancheParameters[_trancheNum].trancheAFixedPercentage = _newTrAPercentage;
+        trancheParameters[_trancheNum].storedTrancheAPrice = setTrancheAExchangeRate(_trancheNum);
+    }
+
     function addTrancheToProtocol(address _buyerCoinAddress, 
             address _aTokenAddress, 
             string memory _nameA, 
@@ -232,7 +241,6 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
             string memory _nameB, 
             string memory _symbolB, 
             uint256 _fixedRpb, 
-            uint8 _aTokenDec, 
             uint8 _underlyingDec) external onlyAdmins locked {
         require(tranchesDeployerAddress != address(0), "JAave: set tranche eth deployer");
         require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
@@ -244,14 +252,15 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         trancheAddresses[tranchePairsCounter].BTrancheAddress = 
                 IJTranchesDeployer(tranchesDeployerAddress).deployNewTrancheBTokens(_nameB, _symbolB, msg.sender); 
         
-
-        trancheParameters[tranchePairsCounter].aTokenDecimals = _aTokenDec;
         trancheParameters[tranchePairsCounter].underlyingDecimals = _underlyingDec;
         trancheParameters[tranchePairsCounter].trancheAFixedPercentage = _fixedRpb;
         trancheParameters[tranchePairsCounter].trancheALastActionBlock = block.number;
+        // if we would like to have always 18 decimals
         trancheParameters[tranchePairsCounter].storedTrancheAPrice = uint256(1e18);
 
         trancheParameters[tranchePairsCounter].redemptionPercentage = 9950;  //default value 99.5%
+
+        calcRPBFromPercentage(tranchePairsCounter); // initialize tranche A RPB
 
         emit TrancheAddedToProtocol(tranchePairsCounter, trancheAddresses[tranchePairsCounter].ATrancheAddress, trancheAddresses[tranchePairsCounter].BTrancheAddress);
 
@@ -265,8 +274,9 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      */
     function setTrancheAExchangeRate(uint256 _trancheNum) public returns (uint256) {
         calcRPBFromPercentage(_trancheNum);
-        trancheParameters[_trancheNum].storedTrancheAPrice = (trancheParameters[_trancheNum].storedTrancheAPrice)
-                .add( ( trancheParameters[_trancheNum].trancheACurrentRPB).mul( (block.number).sub(trancheParameters[_trancheNum].trancheALastActionBlock) ));
+        uint256 deltaBlocks = (block.number).sub(trancheParameters[_trancheNum].trancheALastActionBlock);
+        uint256 deltaPrice = (trancheParameters[_trancheNum].trancheACurrentRPB).mul(deltaBlocks);
+        trancheParameters[_trancheNum].storedTrancheAPrice = (trancheParameters[_trancheNum].storedTrancheAPrice).add(deltaPrice);
         return trancheParameters[_trancheNum].storedTrancheAPrice;
     }
 
@@ -289,31 +299,36 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     }
 
     /**
-     * @dev get Tranche A exchange rate
+     * @dev get Tranche A exchange rate (tokens with 18 decimals)
      * @param _trancheNum tranche number
      * @return tranche A token current price
      */
     function calcRPBFromPercentage(uint256 _trancheNum) public returns (uint256) {
+        // if normalized price in tranche A price, everything should be scaled to 1e18 
         trancheParameters[_trancheNum].trancheACurrentRPB = trancheParameters[_trancheNum].storedTrancheAPrice
                         .mul(trancheParameters[_trancheNum].trancheAFixedPercentage).div(totalBlocksPerYear).div(1e18);
-        //trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         return trancheParameters[_trancheNum].trancheACurrentRPB;
     }
 
     /**
-     * @dev get Tranche A value
+     * @dev get Tranche A value in underlying tokens
      * @param _trancheNum tranche number
-     * @return tranche A value
+     * @return trANormValue tranche A value in underlying tokens
      */
-    function getTrAValue(uint256 _trancheNum) public view returns (uint256) {
+    function getTrAValue(uint256 _trancheNum) public view returns (uint256 trANormValue) {
         uint256 totASupply = IERC20Upgradeable(trancheAddresses[_trancheNum].ATrancheAddress).totalSupply();
-        return totASupply.mul(getTrancheAExchangeRate(_trancheNum)).div(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals));
+        uint256 diffDec = uint256(18).sub(uint256(trancheParameters[_trancheNum].underlyingDecimals));
+        if (diffDec > 0)
+            trANormValue = totASupply.mul(getTrancheAExchangeRate(_trancheNum)).div(1e18).div(10 ** diffDec);
+        else    
+            trANormValue = totASupply.mul(getTrancheAExchangeRate(_trancheNum)).div(1e18);
+        return trANormValue;
     }
 
     /**
-     * @dev get Tranche B value
+     * @dev get Tranche B value in underlying tokens
      * @param _trancheNum tranche number
-     * @return tranche B value
+     * @return tranche B value in underlying tokens
      */
     function getTrBValue(uint256 _trancheNum) public view returns (uint256) {
         uint256 totProtValue = getTotalValue(_trancheNum);
@@ -325,9 +340,9 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     }
 
     /**
-     * @dev get Tranche total value
+     * @dev get Tranche total value in underlying tokens
      * @param _trancheNum tranche number
-     * @return tranche total value
+     * @return tranche total value in underlying tokens
      */
     function getTotalValue(uint256 _trancheNum) public view returns (uint256) {
         return getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
@@ -336,7 +351,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     /**
      * @dev get Tranche B exchange rate
      * @param _trancheNum tranche number
-     * @param _newAmount new amount entering tranche B
+     * @param _newAmount new amount entering tranche B (underlying token decimals)
      * @return tbPrice tranche B token current price
      */
     function getTrancheBExchangeRate(uint256 _trancheNum, uint256 _newAmount) public view returns (uint256 tbPrice) {
@@ -348,20 +363,31 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         // bSupply = Total number of tbDai in protocol
         uint256 totTrBValue;
 
-        uint256 totBSupply = IERC20Upgradeable(trancheAddresses[_trancheNum].BTrancheAddress).totalSupply();
-        uint256 newBSupply = totBSupply.add(_newAmount);
+        uint256 totBSupply = IERC20Upgradeable(trancheAddresses[_trancheNum].BTrancheAddress).totalSupply(); // 18 decimals
+        // if normalized price in tranche A price, everything should be scaled to 1e18 
+        uint256 underlyingDec = uint256(trancheParameters[_trancheNum].underlyingDecimals);
+        uint256 normAmount = _newAmount;
+        if (underlyingDec < 18)
+            normAmount = _newAmount.mul(10 ** uint256(18).sub(underlyingDec));
+        uint256 newBSupply = totBSupply.add(normAmount); // 18 decimals
 
-        uint256 totProtValue = getTotalValue(_trancheNum).add(_newAmount);
-        uint256 totTrAValue = getTrAValue(_trancheNum);
+        uint256 totProtValue = getTotalValue(_trancheNum).add(_newAmount); //underlying token decimals
+        uint256 totTrAValue = getTrAValue(_trancheNum); //underlying token decimals
         if (totProtValue >= totTrAValue)
-            totTrBValue = totProtValue.sub(totTrAValue);
+            totTrBValue = totProtValue.sub(totTrAValue); //underlying token decimals
         else
             totTrBValue = 0;
+        // if normalized price in tranche A price, everything should be scaled to 1e18 
+        if (underlyingDec < 18 && totTrBValue > 0) {
+            totTrBValue = totTrBValue.mul(10 ** (uint256(18).sub(underlyingDec)));
+        }
 
         if (totTrBValue > 0 && newBSupply > 0) {
-            tbPrice = totTrBValue.mul(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals)).div(newBSupply);
+            // if normalized price in tranche A price, everything should be scaled to 1e18 
+            tbPrice = totTrBValue.mul(1e18).div(newBSupply);
         } else
-            tbPrice = 10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals);
+            // if normalized price in tranche A price, everything should be scaled to 1e18 
+            tbPrice = uint256(1e18);
 
         return tbPrice;
     }
@@ -373,7 +399,6 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      */
     function buyTrancheAToken(uint256 _trancheNum, uint256 _amount) external payable locked {
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
-
         //aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
@@ -382,6 +407,8 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
             TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
+            // check approve
+            require(IERC20Upgradeable(_tokenAddr).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed buying tranche A");
             SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), _amount);
         }
 
@@ -393,7 +420,10 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         uint256 taAmount;
         if (newAaveTokenBalance > prevAaveTokenBalance) {
             // set amount of tokens to be minted calculate taToken amount via taToken price
-            taAmount = _amount.mul(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals)).div(setTrancheAExchangeRate(_trancheNum));
+            // if normalized price in tranche A price, everything should be scaled to 1e18 
+            uint256 diffDec = uint256(18).sub(uint256(trancheParameters[_trancheNum].underlyingDecimals));
+            uint256 normAmount = _amount.mul(10 ** diffDec);
+            taAmount = normAmount.mul(1e18).div(trancheParameters[_trancheNum].storedTrancheAPrice);
             //Mint trancheA tokens and send them to msg.sender;
             IJTrancheTokens(trancheAddresses[_trancheNum].ATrancheAddress).mint(msg.sender, taAmount);
         }
@@ -416,15 +446,19 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(trancheAddresses[_trancheNum].ATrancheAddress), msg.sender, address(this), _amount);
 
         setTrancheAExchangeRate(_trancheNum);
-        uint256 taAmount = _amount.mul(trancheParameters[_trancheNum].storedTrancheAPrice).div(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals));
-        // not sure about this
-        uint256 taTotAmount = getTrAValue(_trancheNum);
-        if (taAmount > taTotAmount)
-            taAmount = taTotAmount;
 
-        uint256 userAmount = taAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(PERCENT_DIVIDER);
+        uint256 taAmount = _amount.mul(trancheParameters[_trancheNum].storedTrancheAPrice).div(1e18);
+        // if normalized price in tranche A price, everything should be scaled to 1e18 
+        uint256 diffDec = uint256(18).sub(uint256(trancheParameters[_trancheNum].underlyingDecimals));
+        uint256 normAmount = taAmount.div(10 ** diffDec);
+        // not sure about this, but it should be checked
+        uint256 taTotAmount = getTrAValue(_trancheNum);
+        if (normAmount > taTotAmount)
+            normAmount = taTotAmount;
+
+        uint256 userAmount = normAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(PERCENT_DIVIDER);
         aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, userAmount, msg.sender);
-        uint256 feesAmount = taAmount.sub(userAmount);
+        uint256 feesAmount = normAmount.sub(userAmount);
         aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, feesAmount, feesCollectorAddress);
         
         IJTrancheTokens(trancheAddresses[_trancheNum].ATrancheAddress).burn(_amount);
@@ -442,7 +476,10 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         // refresh value for tranche A
         setTrancheAExchangeRate(_trancheNum);
         // get tranche B exchange rate
-        uint256 tbAmount = _amount.mul(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals)).div(getTrancheBExchangeRate(_trancheNum, _amount));
+        // if normalized price in tranche B price, everything should be scaled to 1e18 
+        uint256 diffDec = uint256(18).sub(uint256(trancheParameters[_trancheNum].underlyingDecimals));
+        uint256 normAmount = _amount.mul(10 ** diffDec);
+        uint256 tbAmount = normAmount.mul(1e18).div(getTrancheBExchangeRate(_trancheNum, _amount));
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
         //aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
@@ -452,6 +489,8 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
             TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
+            // check approve
+            require(IERC20Upgradeable(_tokenAddr).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed buying tranche B");
             SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), _amount);
         }
 
@@ -484,15 +523,17 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         // update tranche A price
         setTrancheAExchangeRate(_trancheNum);
         // get tranche B exchange rate
-        uint256 tbAmount = _amount.mul(getTrancheBExchangeRate(_trancheNum, 0)).div(10 ** uint256(trancheParameters[_trancheNum].underlyingDecimals));
-        // not sure about this
+        uint256 tbAmount = _amount.mul(getTrancheBExchangeRate(_trancheNum, 0)).div(1e18);
+        uint256 diffDec = uint256(18).sub(uint256(trancheParameters[_trancheNum].underlyingDecimals));
+        uint256 normAmount = tbAmount.div(10 ** diffDec);
+        // not sure about this, but it should be checked
         uint256 tbTotAmount = getTrBValue(_trancheNum);
-        if (tbAmount > tbTotAmount)
-            tbAmount = tbTotAmount;
+        if (normAmount > tbTotAmount)
+            normAmount = tbTotAmount;
 
-        uint256 userAmount = tbAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(PERCENT_DIVIDER);
+        uint256 userAmount = normAmount.mul(trancheParameters[_trancheNum].redemptionPercentage).div(PERCENT_DIVIDER);
         aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, userAmount, msg.sender);
-        uint256 feesAmount = tbAmount.sub(userAmount);
+        uint256 feesAmount = normAmount.sub(userAmount);
         aaveWithdraw(trancheAddresses[_trancheNum].buyerCoinAddress, feesAmount, feesCollectorAddress);
 
         IJTrancheTokens(trancheAddresses[_trancheNum].BTrancheAddress).burn(_amount);
@@ -520,7 +561,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      * @param _tokenContract token contract address
      * @param _amount token amount to be transferred 
      */
-    function transferTokenToOwner(address _tokenContract, uint256 _amount) external onlyAdmins {
+    function transferTokenToFeesCollector(address _tokenContract, uint256 _amount) external onlyAdmins {
         SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_tokenContract), feesCollectorAddress, _amount);
     }
 
@@ -528,7 +569,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      * @dev transfer ethers in this contract to fees collector contract
      * @param _amount ethers amount to be transferred 
      */
-    function withdrawEthToOwner(uint256 _amount) external onlyAdmins {
+    function withdrawEthToFeesCollector(uint256 _amount) external onlyAdmins {
         TransferETHHelper.safeTransferETH(feesCollectorAddress, _amount);
     }
 

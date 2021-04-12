@@ -41,14 +41,14 @@ module.exports = async (deployer, network, accounts) => {
 
     await JTDeployer.setJAaveAddress(JAinstance.address, { from: factoryOwner });
 
-    await JAinstance.addTrancheToProtocol(ETH_ADDRESS, aWETH_Address, "jEthTrancheAToken", "JEA", "jEthTrancheBToken", "JEB", web3.utils.toWei("0.04", "ether"), 18, 18, { from: factoryOwner });
+    await JAinstance.addTrancheToProtocol(ETH_ADDRESS, aWETH_Address, "jEthTrancheAToken", "JEA", "jEthTrancheBToken", "JEB", web3.utils.toWei("0.04", "ether"), 18, { from: factoryOwner });
     trParams = await JAinstance.trancheAddresses(0);
     let EthTrA = await JTrancheAToken.at(trParams.ATrancheAddress);
     console.log("Eth Tranche A Token Address: " + EthTrA.address);
     let EthTrB = await JTrancheBToken.at(trParams.BTrancheAddress);
     console.log("Eth Tranche B Token Address: " + EthTrB.address);
 
-    await JAinstance.addTrancheToProtocol(DAI_ADDRESS, aDAI_Address, "jDaiTrancheAToken", "JDA", "jDaiTrancheBToken", "JDB", web3.utils.toWei("0.03", "ether"), 18, 18, { from: factoryOwner });
+    await JAinstance.addTrancheToProtocol(DAI_ADDRESS, aDAI_Address, "jDaiTrancheAToken", "JDA", "jDaiTrancheBToken", "JDB", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
     trParams = await JAinstance.trancheAddresses(1);
     let DaiTrA = await JTrancheAToken.at(trParams.ATrancheAddress);
     console.log("Eth Tranche A Token Address: " + DaiTrA.address);
@@ -79,10 +79,10 @@ module.exports = async (deployer, network, accounts) => {
       await JAaveInstance.setAavePoolAddressProvider(AAVE_POOL, { from: factoryOwner });
       console.log('compound deployer 2');
 
-      await JAaveInstance.addTrancheToProtocol(DAI_ADDRESS, ADAI_ADDRESS, "Tranche A - AAVE DAI", "AADAI", "Tranche B - AAVE DAI", "BADAI", web3.utils.toWei("0.03", "ether"), 18, 18, { from: factoryOwner });
+      await JAaveInstance.addTrancheToProtocol(DAI_ADDRESS, ADAI_ADDRESS, "Tranche A - AAVE DAI", "AADAI", "Tranche B - AAVE DAI", "BADAI", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
       console.log('compound deployer 3');
 
-      await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "Tranche A - AAVE ETH", "AAETH", "Tranche A - AAVE ETH", "BAETH", web3.utils.toWei("0.04", "ether"), 18, 18, { from: factoryOwner });
+      await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "Tranche A - AAVE ETH", "AAETH", "Tranche A - AAVE ETH", "BAETH", web3.utils.toWei("0.04", "ether"), 18, { from: factoryOwner });
       console.log('compound deployer 4');
 
       console.log(`JAave deployed at: ${JAaveInstance.address}`);

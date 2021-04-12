@@ -30,7 +30,6 @@ contract JAaveStorage is OwnableUpgradeable {
         uint256 storedTrancheAPrice;
         uint256 trancheACurrentRPB;
         uint16 redemptionPercentage;        // percentage with 2 decimals (divided by 10000, i.e. 95% is 9500)
-        uint8 aTokenDecimals;
         uint8 underlyingDecimals;
     }
 
