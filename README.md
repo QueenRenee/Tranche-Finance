@@ -11,9 +11,7 @@ c) set JAave address in jTranchesDeployer contract
 d) call addTrancheToProtocol(address _erc20Contract, string memory _nameA, string memory _symbolA, 
             string memory _nameB, string memory _symbolB, uint256 _fixedRpb, uint8 _underlyingDec) to set a new tranche set
 
-    add eth tranche: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE","0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347","Eth Tranche A","ETA","Eth Tranche B","ETB", web3.utils.toWei("0.04", "ether"),"18"
-
-    add WETH tranche: "0xd0A1E359811322d97991E03f863a0C30C2cF029C","0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347","WEth Tranche A","WETA","WEth Tranche B","WETB", web3.utils.toWei("0.04", "ether"),"18"
+    add ETH tranche: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE","0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347","Eth Tranche A","ETA","Eth Tranche B","ETB", web3.utils.toWei("0.04", "ether"),"18"  ----> Please read note below here
 
     add DAI tranche: "0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD","0xdCf0aF9e59C002FA3AA091a46196b37530FD48a8","Dai tranche A","DTA","Dai Tranche B","DTB", web3.utils.toWei("0.03", "ether"),"18"
 
@@ -24,6 +22,7 @@ d) call addTrancheToProtocol(address _erc20Contract, string memory _nameA, strin
 
 Users can now call buy and redeem functions for tranche A & B tokens
 
+Note: if ETH tranche is deployed, please deploy WETHGateway contract without a proxy, then set its address in JAave with setWETHGatewayAddress function.
 
 
 
@@ -39,11 +38,11 @@ Limit is 24 KiB for single contract
     <tbody>
         <tr>
             <td>JAave</td>
-            <td><code>17.25 KiB</code></td>
+            <td><code>17.59 KiB</code></td>
         </tr>
         <tr>
             <td>JAaveStorage</td>
-            <td><code>1.59 KiB</code></td>
+            <td><code>1.62 KiB</code></td>
         </tr>
         <tr>
             <td>JTrancheAToken</td>
@@ -56,6 +55,10 @@ Limit is 24 KiB for single contract
         <tr>
             <td>JTranchesDeployer</td>
             <td><code>18.62 KiB</code></td>
+        </tr>
+        <tr>
+            <td>WETHGateway</td>
+            <td><code>2.72 KiB</code></td>
         </tr>
     </tbody>
   </table>

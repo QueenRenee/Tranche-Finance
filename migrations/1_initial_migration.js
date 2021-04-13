@@ -11,6 +11,9 @@ var JTranchesDeployer = artifacts.require('JTranchesDeployer');
 var JTrancheAToken = artifacts.require('JTrancheAToken');
 var JTrancheBToken = artifacts.require('JTrancheBToken');
 
+var WETHToken = artifacts.require('WETH9_');
+var WETHGateway = artifacts.require('WETHGateway');
+
 module.exports = async (deployer, network, accounts) => {
   //const MYERC20_TOKEN_SUPPLY = 5000000;
   //const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -37,7 +40,16 @@ module.exports = async (deployer, network, accounts) => {
     const JAinstance = await deployProxy(JAave, [JPOinstance.address, JFCinstance.address, JTDeployer.address], { from: factoryOwner });
     console.log('JAave Deployed: ', JAinstance.address);
 
+    await deployer.deploy(WETHToken);
+    const JWethinstance = await WETHToken.deployed();
+    console.log('WETH Token Deployed: ', JWethinstance.address);
+
+    await deployer.deploy(WETHGateway, JWethinstance.address, JAinstance.address);
+    const JWGinstance = await WETHGateway.deployed();
+    console.log('WETHGateway Deployed: ', JWGinstance.address);
+
     await JAinstance.setAavePoolAddressProvider(LendingPoolAddressesProvider, { from: factoryOwner })
+    await JAinstance.setWETHGatewayAddress(JWGinstance.address, { from: factoryOwner });
 
     await JTDeployer.setJAaveAddress(JAinstance.address, { from: factoryOwner });
 

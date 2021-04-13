@@ -18,6 +18,7 @@ import "./IJTranchesDeployer.sol";
 import "./JAaveStorage.sol";
 import "./IJAave.sol";
 import "./TokenInterface.sol";
+import "./interfaces/IWETHGateway.sol";
 
 
 contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
@@ -167,6 +168,14 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         return _token;
     }
 
+    /**
+     * @dev set Weth Gateway contract address
+     * @param _wethGatewayAddress weth gateway contract address
+     */
+    function setWETHGatewayAddress(address _wethGatewayAddress) external onlyAdmins {
+        wethGatewayAddress = _wethGatewayAddress;
+    }
+
     /** 
      * @dev User withdraws tokens from the Aave protocol
      * @param _tokenAddr The address of the token to be withdrawn
@@ -185,7 +194,10 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
             // if weth, pull to proxy and return ETH to user
             ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, address(this));
             // from Weth to Eth, all the Weth balance --> no Weth in contract
-            TokenInterface(WETH_ADDRESS).withdraw(IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this)));
+            // TokenInterface(WETH_ADDRESS).withdraw(IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this)));
+            uint256 wethBal = IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this));
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(WETH_ADDRESS), wethGatewayAddress, wethBal);
+            IWETHGateway(wethGatewayAddress).withdrawETH(wethBal);
             // get new eth balance
             newBalance = getEthBalance();
             if (newBalance > oldBalance)
@@ -404,7 +416,9 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
         if (_tokenAddr == ETH_ADDR) {
             require(msg.value == _amount, "JAave: msg.value not equal to amount");
-            TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
+            //uint256 wethBal = IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this));
+            IWETHGateway(wethGatewayAddress).depositETH{value: msg.value}();
+            //TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
             // check approve
@@ -486,7 +500,8 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
         if (_tokenAddr == ETH_ADDR) {
             require(msg.value == _amount, "JAave: msg.value not equal to amount");
-            TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
+            IWETHGateway(wethGatewayAddress).depositETH{value: msg.value}();
+            // TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
             // check approve

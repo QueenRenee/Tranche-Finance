@@ -37,6 +37,7 @@ contract JAaveStorage is OwnableUpgradeable {
     address public feesCollectorAddress;
     address public tranchesDeployerAddress;
     address public lendingPoolAddressProvider;
+    address public wethGatewayAddress;
 
     uint256 public tranchePairsCounter;
     uint256 public totalBlocksPerYear; 
