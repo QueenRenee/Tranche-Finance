@@ -19,6 +19,7 @@ import "./JAaveStorage.sol";
 import "./IJAave.sol";
 import "./TokenInterface.sol";
 import "./interfaces/IWETHGateway.sol";
+import "./interfaces/IAaveIncentivesController.sol";
 
 
 contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
@@ -32,11 +33,13 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      */
     function initialize(address _priceOracle, 
             address _feesCollector, 
-            address _tranchesDepl) public initializer() {
+            address _tranchesDepl,
+            address _aaveIncentiveController) public initializer() {
         OwnableUpgradeable.__Ownable_init();
         priceOracleAddress = _priceOracle;
         feesCollectorAddress = _feesCollector;
         tranchesDeployerAddress = _tranchesDepl;
+        aaveIncentiveControllerAddress = _aaveIncentiveController;
         redeemTimeout = 3; //default
         totalBlocksPerYear = 2372500;
     }
@@ -586,6 +589,30 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      */
     function withdrawEthToFeesCollector(uint256 _amount) external onlyAdmins {
         TransferETHHelper.safeTransferETH(feesCollectorAddress, _amount);
+    }
+
+    /**
+     * @dev get token rewards amount
+     * @return amount of unclaimed tokens
+     */
+    function getAaveUnclaimedRewards() external view returns(uint256) {
+        return IAaveIncentivesController(aaveIncentiveControllerAddress).getUserUnclaimedRewards(address(this));
+    }
+
+    /**
+     * @dev claim token rewards from all assets in protocol and transfer them to fees collector
+     * @param _rewardToken reward token address
+     * @param _amount amount of rewards token to claim (set it to 0 if you want to claim for all tokens)
+     */
+    function claimAaveRewards(address _rewardToken, uint256 _amount) external {
+        address[] memory assets = new address[](tranchePairsCounter);
+        for (uint256 i = 0; i < tranchePairsCounter; i++) {
+            assets[i] = trancheAddresses[i].aTokenAddress;
+        }
+        uint256 claimedRewards = IAaveIncentivesController(aaveIncentiveControllerAddress).claimRewards(assets,  _amount, address(this));
+        if (claimedRewards > 0) {
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_rewardToken), feesCollectorAddress, claimedRewards);
+        }
     }
 
 }
