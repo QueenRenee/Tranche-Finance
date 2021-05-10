@@ -74,14 +74,12 @@ module.exports = async (deployer, network, accounts) => {
     if (IS_UPGRADE == 'true') {
       console.log('contracts are upgraded');
     } else {
+
       // deployed new contract
       const aaveDeployer = await deployProxy(JTranchesDeployer, [], { from: factoryOwner });
       console.log(`AAVE_DEPLOYER=${aaveDeployer.address}`);
 
-      const JPOinstance = await deployProxy(JPriceOracle, [], { from: factoryOwner });
-      console.log('JPriceOracle Deployed: ', JPOinstance.address);
-
-      const JAaveInstance = await deployProxy(JAave, [JPOinstance.address, FEE_COLLECTOR_ADDRESS, aaveDeployer.address],
+      const JAaveInstance = await deployProxy(JAave, [PRICE_ORACLE_ADDRESS, FEE_COLLECTOR_ADDRESS, aaveDeployer.address, PRICE_ORACLE_ADDRESS],
         { from: factoryOwner });
       console.log(`AAVE_TRANCHE_ADDRESS=${JAaveInstance.address}`);
 
@@ -94,8 +92,8 @@ module.exports = async (deployer, network, accounts) => {
       await JAaveInstance.addTrancheToProtocol(DAI_ADDRESS, ADAI_ADDRESS, "Tranche A - AAVE DAI", "AADAI", "Tranche B - AAVE DAI", "BADAI", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
       console.log('compound deployer 3');
 
-      await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "Tranche A - AAVE ETH", "AAETH", "Tranche A - AAVE ETH", "BAETH", web3.utils.toWei("0.04", "ether"), 18, { from: factoryOwner });
-      console.log('compound deployer 4');
+      // await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "Tranche A - AAVE ETH", "AAETH", "Tranche A - AAVE ETH", "BAETH", web3.utils.toWei("0.04", "ether"), 18, { from: factoryOwner });
+      // console.log('compound deployer 4');
 
       console.log(`JAave deployed at: ${JAaveInstance.address}`);
     }
