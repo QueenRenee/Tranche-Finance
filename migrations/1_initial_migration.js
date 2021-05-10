@@ -68,6 +68,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log("Eth Tranche B Token Address: " + DaiTrB.address);
 
   } else if (network == "kovan") {
+    // AAVE_TRANCHE_ADDRESS=0x0D98E839E7db6A6507A0CAd59c4C23cBD7bAB6Af
     let { FEE_COLLECTOR_ADDRESS, PRICE_ORACLE_ADDRESS, IS_UPGRADE, AAVE_POOL, AWETH_ADDRESS, ADAI_ADDRESS, DAI_ADDRESS } = process.env;
     const accounts = await web3.eth.getAccounts();
     const factoryOwner = accounts[0];

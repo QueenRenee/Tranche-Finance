@@ -24,7 +24,7 @@
     "@aave/protocol-v2": "1.0.1",
     "@openzeppelin/contracts": "3.4.0",
     "@openzeppelin/contracts-upgradeable": "3.4.0",
-    "@truffle/hdwallet-provider": "latest",
+    "@truffle/hdwallet-provider": "1.0.41-1",
     "dotenv": "8.2.0",
     "ganache-core": "latest",
     "mocha": "latest",
