@@ -134,7 +134,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
         IAaveProtocolDataProvider aaveProtocolDataProvider = getDataProvider();
         address asset = trancheAddresses[_trancheNum].buyerCoinAddress;
-        if (trancheAddresses[_trancheNum].buyerCoinAddress == ETH_ADDR)
+        if (asset == ETH_ADDR)
             asset = WETH_ADDRESS;
         return aaveProtocolDataProvider.getReserveData(asset);
     }
@@ -142,28 +142,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     function getLendingPool() external view returns (address) {
         return ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
     }
-/*
-    /**
-     *  @notice User deposits tokens to the Aave protocol
-     *  @dev User needs to approve the DSProxy to pull the _tokenAddr tokens
-     *  @param _tokenAddr The address of the token to be deposited
-     *  @param _amount Amount of tokens to be deposited
-     */
-/*    function aaveDeposit(address _tokenAddr, uint256 _amount) public payable {
-        address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
 
-        if (_tokenAddr == ETH_ADDR) {
-            require(msg.value == _amount);
-            TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
-            _tokenAddr = WETH_ADDRESS;
-        } else {
-            SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_tokenAddr), msg.sender, address(this), _amount);
-        }
-
-        SafeERC20Upgradeable.safeApprove(IERC20Upgradeable(_tokenAddr), lendingPool, _amount);
-        ILendingPool(lendingPool).deposit(_tokenAddr, _amount, address(this), AAVE_REFERRAL_CODE);
-    }
-*/
     function changeToWeth(address _token) private pure returns(address) {
         if (_token == ETH_ADDR) {
             return WETH_ADDRESS;
@@ -197,7 +176,6 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
             // if weth, pull to proxy and return ETH to user
             ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, address(this));
             // from Weth to Eth, all the Weth balance --> no Weth in contract
-            // TokenInterface(WETH_ADDRESS).withdraw(IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this)));
             uint256 wethBal = IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this));
             SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(WETH_ADDRESS), wethGatewayAddress, wethBal);
             IWETHGateway(wethGatewayAddress).withdrawETH(wethBal);
@@ -212,7 +190,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     }
 
     /**
-     * @dev check if a cToken is allowed or not
+     * @dev set decimals on the underlying token of a tranche
      * @param _trancheNum tranche number
      * @param _underlyingDec underlying token decimals
      */
@@ -283,11 +261,11 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     } 
 
     /**
-     * @dev get Tranche A exchange rate
+     * @dev set Tranche A exchange rate
      * @param _trancheNum tranche number
      * @return tranche A token current price
      */
-    function setTrancheAExchangeRate(uint256 _trancheNum) public returns (uint256) {
+    function setTrancheAExchangeRate(uint256 _trancheNum) internal returns (uint256) {
         calcRPBFromPercentage(_trancheNum);
         uint256 deltaBlocks = (block.number).sub(trancheParameters[_trancheNum].trancheALastActionBlock);
         uint256 deltaPrice = (trancheParameters[_trancheNum].trancheACurrentRPB).mul(deltaBlocks);
@@ -333,10 +311,10 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     function getTrAValue(uint256 _trancheNum) public view returns (uint256 trANormValue) {
         uint256 totASupply = IERC20Upgradeable(trancheAddresses[_trancheNum].ATrancheAddress).totalSupply();
         uint256 diffDec = uint256(18).sub(uint256(trancheParameters[_trancheNum].underlyingDecimals));
-        if (diffDec > 0)
+        // if (diffDec > 0)
             trANormValue = totASupply.mul(getTrancheAExchangeRate(_trancheNum)).div(1e18).div(10 ** diffDec);
-        else    
-            trANormValue = totASupply.mul(getTrancheAExchangeRate(_trancheNum)).div(1e18);
+        // else    
+        //     trANormValue = totASupply.mul(getTrancheAExchangeRate(_trancheNum)).div(1e18);
         return trANormValue;
     }
 
@@ -414,14 +392,11 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      */
     function buyTrancheAToken(uint256 _trancheNum, uint256 _amount) external payable locked {
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
-        //aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
         if (_tokenAddr == ETH_ADDR) {
             require(msg.value == _amount, "JAave: msg.value not equal to amount");
-            //uint256 wethBal = IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this));
             IWETHGateway(wethGatewayAddress).depositETH{value: msg.value}();
-            //TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
             // check approve
@@ -498,13 +473,11 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         uint256 normAmount = _amount.mul(10 ** diffDec);
         uint256 tbAmount = normAmount.mul(1e18).div(getTrancheBExchangeRate(_trancheNum, _amount));
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
-        //aaveDeposit(trancheAddresses[_trancheNum].buyerCoinAddress, _amount);
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
         if (_tokenAddr == ETH_ADDR) {
             require(msg.value == _amount, "JAave: msg.value not equal to amount");
             IWETHGateway(wethGatewayAddress).depositETH{value: msg.value}();
-            // TokenInterface(WETH_ADDRESS).deposit{value: _amount}();
             _tokenAddr = WETH_ADDRESS;
         } else {
             // check approve
@@ -523,6 +496,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
             tbAmount = 0;
 
         lastActivity[msg.sender] = block.number;
+        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         emit TrancheBTokenMinted(_trancheNum, msg.sender, _amount, tbAmount);
     }
 
@@ -556,6 +530,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
 
         IJTrancheTokens(trancheAddresses[_trancheNum].BTrancheAddress).burn(_amount);
         lastActivity[msg.sender] = block.number;
+        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         emit TrancheBTokenRedemption(_trancheNum, msg.sender, _amount, userAmount, feesAmount);
     }
 

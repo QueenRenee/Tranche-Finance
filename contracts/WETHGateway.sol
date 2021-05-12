@@ -26,7 +26,7 @@ contract WETHGateway is IWETHGateway, Ownable {
   }
 
   /**
-   * @dev deposits WETH, using native ETH. 
+   * @dev set JAave contract address 
    **/
   function setJAaveAddress(address _jAaveAddress) external onlyOwner {
     require(_jAaveAddress != address(0), "WETHGateway: address not allowed");
