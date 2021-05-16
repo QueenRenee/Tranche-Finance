@@ -4,7 +4,7 @@
  * @summary: Jibrel Aave Tranche Protocol
  * @author: Jibrel Team
  */
-pragma solidity ^0.6.12;
+pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2; // needed for getAllAtokens and getAllReservesTokens
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
@@ -34,7 +34,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
     function initialize(address _priceOracle, 
             address _feesCollector, 
             address _tranchesDepl,
-            address _aaveIncentiveController) public initializer() {
+            address _aaveIncentiveController) external initializer() {
         OwnableUpgradeable.__Ownable_init();
         priceOracleAddress = _priceOracle;
         feesCollectorAddress = _feesCollector;
@@ -56,7 +56,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      * @dev locked modifiers
      */
     modifier locked() {
-        require(!fLock);
+        require(!fLock, "JAave: locked function");
         fLock = true;
         _;
         fLock = false;
@@ -270,6 +270,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         uint256 deltaBlocks = (block.number).sub(trancheParameters[_trancheNum].trancheALastActionBlock);
         uint256 deltaPrice = (trancheParameters[_trancheNum].trancheACurrentRPB).mul(deltaBlocks);
         trancheParameters[_trancheNum].storedTrancheAPrice = (trancheParameters[_trancheNum].storedTrancheAPrice).add(deltaPrice);
+        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         return trancheParameters[_trancheNum].storedTrancheAPrice;
     }
 
@@ -421,7 +422,6 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         }
 
         lastActivity[msg.sender] = block.number;
-        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         emit TrancheATokenMinted(_trancheNum, msg.sender, _amount, taAmount);
     }
 
@@ -455,7 +455,6 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
         
         IJTrancheTokens(trancheAddresses[_trancheNum].ATrancheAddress).burn(_amount);
         lastActivity[msg.sender] = block.number;
-        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         emit TrancheATokenRedemption(_trancheNum, msg.sender, _amount, userAmount, feesAmount);
     }
 
@@ -496,7 +495,6 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
             tbAmount = 0;
 
         lastActivity[msg.sender] = block.number;
-        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         emit TrancheBTokenMinted(_trancheNum, msg.sender, _amount, tbAmount);
     }
 
@@ -530,7 +528,6 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
 
         IJTrancheTokens(trancheAddresses[_trancheNum].BTrancheAddress).burn(_amount);
         lastActivity[msg.sender] = block.number;
-        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         emit TrancheBTokenRedemption(_trancheNum, msg.sender, _amount, userAmount, feesAmount);
     }
 

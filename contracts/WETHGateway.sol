@@ -38,7 +38,7 @@ contract WETHGateway is IWETHGateway, Ownable {
    **/
   function depositETH() external payable override {
     WETH.deposit{value: msg.value}();
-    uint wethBalance = IERC20(address(WETH)).balanceOf(address(this));
+    uint256 wethBalance = IERC20(address(WETH)).balanceOf(address(this));
     IERC20(address(WETH)).transfer(jAaveAddress, wethBalance);
   }
 

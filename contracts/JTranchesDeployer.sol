@@ -17,11 +17,11 @@ contract JTranchesDeployer is OwnableUpgradeable, IJTranchesDeployer {
 
     address public jAaveAddress;
 
-    function initialize() public initializer() {
+    function initialize() external initializer() {
         OwnableUpgradeable.__Ownable_init();
     }
 
-    function setJAaveAddress(address _jAave) public onlyOwner {
+    function setJAaveAddress(address _jAave) external onlyOwner {
         jAaveAddress = _jAave;
     }
 
@@ -30,7 +30,7 @@ contract JTranchesDeployer is OwnableUpgradeable, IJTranchesDeployer {
         _;
     }
 
-    function deployNewTrancheATokens(string memory _nameA, string memory _symbolA, address _sender) public override onlyProtocol returns (address) {
+    function deployNewTrancheATokens(string memory _nameA, string memory _symbolA, address _sender) external override onlyProtocol returns (address) {
         JTrancheAToken jTrancheA = new JTrancheAToken();
         jTrancheA.initialize(_nameA, _symbolA);
         jTrancheA.setJAaveMinter(msg.sender); 
@@ -38,7 +38,7 @@ contract JTranchesDeployer is OwnableUpgradeable, IJTranchesDeployer {
         return address(jTrancheA);
     }
 
-    function deployNewTrancheBTokens(string memory _nameB, string memory _symbolB, address _sender) public override onlyProtocol returns (address) {
+    function deployNewTrancheBTokens(string memory _nameB, string memory _symbolB, address _sender) external override onlyProtocol returns (address) {
         JTrancheBToken jTrancheB = new JTrancheBToken();
         jTrancheB.initialize(_nameB, _symbolB);
         jTrancheB.setJAaveMinter(msg.sender);

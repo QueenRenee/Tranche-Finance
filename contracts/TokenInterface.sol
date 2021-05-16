@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
 abstract contract TokenInterface {
-    function deposit() public virtual payable;
-    function withdraw(uint256) public virtual;
+    function deposit() external virtual payable;
+    function withdraw(uint256) external virtual;
 }
