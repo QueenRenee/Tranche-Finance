@@ -5,13 +5,12 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
-import "./IJTrancheTokens.sol";
+import "./interfaces/IJTrancheTokens.sol";
+import "./JTrancheATokenStorage.sol";
 
-contract JTrancheAToken is OwnableUpgradeable, ERC20Upgradeable, AccessControlUpgradeable, IJTrancheTokens {
+
+contract JTrancheAToken is OwnableUpgradeable, ERC20Upgradeable, AccessControlUpgradeable, JTrancheATokenStorage, IJTrancheTokens {
 	using SafeMathUpgradeable for uint256;
-
-    // Create a new role identifier for the minter role
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
 	function initialize(string memory name, string memory symbol) external initializer() {
 		OwnableUpgradeable.__Ownable_init();

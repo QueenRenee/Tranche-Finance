@@ -8,35 +8,36 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2; // needed for getAllAtokens and getAllReservesTokens
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "./interfaces/IAaveProtocolDataProvider.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/ILendingPoolAddressesProvider.sol";
 import "./TransferETHHelper.sol";
-import "./IJPriceOracle.sol";
-import "./IJTrancheTokens.sol";
-import "./IJTranchesDeployer.sol";
+import "./interfaces/IJAdminTools.sol";
+import "./interfaces/IJTrancheTokens.sol";
+import "./interfaces/IJTranchesDeployer.sol";
 import "./JAaveStorage.sol";
-import "./IJAave.sol";
+import "./interfaces/IJAave.sol";
 import "./TokenInterface.sol";
 import "./interfaces/IWETHGateway.sol";
 import "./interfaces/IAaveIncentivesController.sol";
 
 
-contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
+contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, IJAave {
     using SafeMathUpgradeable for uint256;
 
     /**
      * @dev contract initializer
-     * @param _priceOracle price oracle address
+     * @param _adminTools price oracle address
      * @param _feesCollector fees collector contract address
      * @param _tranchesDepl tranches deployer contract address
      */
-    function initialize(address _priceOracle, 
+    function initialize(address _adminTools, 
             address _feesCollector, 
             address _tranchesDepl,
             address _aaveIncentiveController) external initializer() {
         OwnableUpgradeable.__Ownable_init();
-        priceOracleAddress = _priceOracle;
+        adminToolsAddress = _adminTools;
         feesCollectorAddress = _feesCollector;
         tranchesDeployerAddress = _tranchesDepl;
         aaveIncentiveControllerAddress = _aaveIncentiveController;
@@ -48,18 +49,8 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      * @dev admins modifiers
      */
     modifier onlyAdmins() {
-        require(IJPriceOracle(priceOracleAddress).isAdmin(msg.sender), "JAave: not an Admin");
+        require(IJAdminTools(adminToolsAddress).isAdmin(msg.sender), "JAave: not an Admin");
         _;
-    }
-
-    /**
-     * @dev locked modifiers
-     */
-    modifier locked() {
-        require(!fLock, "JAave: locked function");
-        fLock = true;
-        _;
-        fLock = false;
     }
 
     fallback() external payable {}
@@ -67,15 +58,15 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
 
     /**
      * @dev set new addresses for price oracle, fees collector and tranche deployer 
-     * @param _priceOracle price oracle address
+     * @param _adminTools price oracle address
      * @param _feesCollector fees collector contract address
      * @param _tranchesDepl tranches deployer contract address
      */
-    function setNewEnvironment(address _priceOracle, 
+    function setNewEnvironment(address _adminTools, 
             address _feesCollector, 
             address _tranchesDepl) external onlyOwner{
-        require((_priceOracle != address(0)) && (_feesCollector != address(0)) && (_tranchesDepl != address(0)), "JAave: check addresses");
-        priceOracleAddress = _priceOracle;
+        require((_adminTools != address(0)) && (_feesCollector != address(0)) && (_tranchesDepl != address(0)), "JAave: check addresses");
+        adminToolsAddress = _adminTools;
         feesCollectorAddress = _feesCollector;
         tranchesDeployerAddress = _tranchesDepl;
     }
@@ -234,7 +225,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
             string memory _nameB, 
             string memory _symbolB, 
             uint256 _fixedRpb, 
-            uint8 _underlyingDec) external onlyAdmins locked {
+            uint8 _underlyingDec) external onlyAdmins nonReentrant {
         require(tranchesDeployerAddress != address(0), "JAave: set tranche eth deployer");
         require(lendingPoolAddressProvider != address(0), "JAave: set lending pool address provider");
 
@@ -391,7 +382,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      * @param _trancheNum tranche number
      * @param _amount amount of stable coins sent by buyer
      */
-    function buyTrancheAToken(uint256 _trancheNum, uint256 _amount) external payable locked {
+    function buyTrancheAToken(uint256 _trancheNum, uint256 _amount) external payable nonReentrant {
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
@@ -430,7 +421,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      * @param _trancheNum tranche number
      * @param _amount amount of stable coins sent by buyer
      */
-    function redeemTrancheAToken(uint256 _trancheNum, uint256 _amount) external locked {
+    function redeemTrancheAToken(uint256 _trancheNum, uint256 _amount) external nonReentrant {
         require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "JAave: redeem timeout not expired on tranche A");
         // check approve
         require(IERC20Upgradeable(trancheAddresses[_trancheNum].ATrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed redeeming tranche A");
@@ -463,7 +454,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      * @param _trancheNum tranche number
      * @param _amount amount of stable coins sent by buyer
      */
-    function buyTrancheBToken(uint256 _trancheNum, uint256 _amount) external payable locked {
+    function buyTrancheBToken(uint256 _trancheNum, uint256 _amount) external payable nonReentrant {
         // refresh value for tranche A
         setTrancheAExchangeRate(_trancheNum);
         // get tranche B exchange rate
@@ -503,7 +494,7 @@ contract JAave is OwnableUpgradeable, JAaveStorage, IJAave {
      * @param _trancheNum tranche number
      * @param _amount amount of stable coins sent by buyer
      */
-    function redeemTrancheBToken(uint256 _trancheNum, uint256 _amount) external locked {
+    function redeemTrancheBToken(uint256 _trancheNum, uint256 _amount) external nonReentrant {
         require((block.number).sub(lastActivity[msg.sender]) >= redeemTimeout, "JAave: redeem timeout not expired on tranche B");
         // check approve
         require(IERC20Upgradeable(trancheAddresses[_trancheNum].BTrancheAddress).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed redeeming tranche B");

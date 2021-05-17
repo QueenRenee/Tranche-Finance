@@ -38,23 +38,51 @@ Limit is 24 KiB for single contract
     <tbody>
         <tr>
             <td>JAave</td>
-            <td><code>18.26 KiB</code></td>
+            <td><code>18.13 KiB</code></td>
         </tr>
         <tr>
             <td>JAaveStorage</td>
-            <td><code>1.66 KiB</code></td>
+            <td><code>1.60 KiB</code></td>
+        </tr>
+        <tr>
+            <td>JAdminTools</td>
+            <td><code>2.73 KiB</code></td>
+        </tr>
+        <tr>
+            <td>JAdminToolsStorage</td>
+            <td><code>0.87 KiB</code></td>
+        </tr>
+        <tr>
+            <td>JFeesCollector</td>
+            <td><code>2.73 KiB</code></td>
+        </tr>
+        <tr>
+            <td>JFeesCollectorStorage</td>
+            <td><code>0.96 KiB</code></td>
         </tr>
         <tr>
             <td>JTrancheAToken</td>
-            <td><code>7.71 KiB</code></td>
+            <td><code>7.96 KiB</code></td>
+        </tr>
+        <tr>
+            <td>JTrancheATokenStorage</td>
+            <td><code>0.44 KiB</code></td>
         </tr>
         <tr>
             <td>JTrancheBToken</td>
-            <td><code>7.71 KiB</code></td>
+            <td><code>7.96 KiB</code></td>
+        </tr>
+        <tr>
+            <td>JTrancheBTokenStorage</td>
+            <td><code>0.44 KiB</code></td>
         </tr>
         <tr>
             <td>JTranchesDeployer</td>
-            <td><code>18.62 KiB</code></td>
+            <td><code>19.13 KiB</code></td>
+        </tr>
+        <tr>
+            <td>JTranchesDeployerStorage</td>
+            <td><code>0.14 KiB</code></td>
         </tr>
         <tr>
             <td>WETHGateway</td>

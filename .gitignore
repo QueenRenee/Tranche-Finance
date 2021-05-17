@@ -5,6 +5,8 @@ build/
 unused/
 dist/
 Aave/
+Aave/aaveContracts/
+Aave/mocks/
 Flatters.bat
 package-lock.json
 .openzeppelin/dev*.json
