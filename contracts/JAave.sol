@@ -213,7 +213,6 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
      * @param _newTrAPercentage new tranche A RPB
      */
     function setTrancheAFixedPercentage(uint256 _trancheNum, uint256 _newTrAPercentage) external onlyAdmins {
-        trancheParameters[_trancheNum].trancheALastActionBlock = block.number;
         trancheParameters[_trancheNum].trancheAFixedPercentage = _newTrAPercentage;
         trancheParameters[_trancheNum].storedTrancheAPrice = setTrancheAExchangeRate(_trancheNum);
     }
