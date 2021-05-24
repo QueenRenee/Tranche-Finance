@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWETH} from './interfaces/IWETH.sol';
 import {IWETHGateway} from './interfaces/IWETHGateway.sol';
-import {DataTypes} from './interfaces/DataTypes.sol';
 import "./TransferETHHelper.sol";
 
 contract WETHGateway is IWETHGateway, Ownable {

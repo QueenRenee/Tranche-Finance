@@ -3,7 +3,7 @@ const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 //var { abi } = require('../build/contracts/myERC20.json');
 
 var JFeesCollector = artifacts.require("JFeesCollector");
-var JPriceOracle = artifacts.require("JPriceOracle");
+var JAdminTools = artifacts.require("JAdminTools");
 
 var JAave = artifacts.require('JAave');
 var JTranchesDeployer = artifacts.require('JTranchesDeployer');
@@ -25,19 +25,21 @@ module.exports = async (deployer, network, accounts) => {
   const LendingPoolAddressesProvider = '0x88757f2f99175387aB4C6a4b3067c77A695b0349';
   const aWETH_Address = '0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347';
   const aDAI_Address = '0xdCf0aF9e59C002FA3AA091a46196b37530FD48a8';
+  const aaveIncentiveController = '0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5';
 
   if (network == "development") {
     const factoryOwner = accounts[0];
-    const JFCinstance = await deployProxy(JFeesCollector, [], { from: factoryOwner });
-    console.log('JFeesCollector Deployed: ', JFCinstance.address);
 
-    const JPOinstance = await deployProxy(JPriceOracle, [], { from: factoryOwner });
-    console.log('JPriceOracle Deployed: ', JPOinstance.address);
+    const JATinstance = await deployProxy(JAdminTools, [], { from: factoryOwner });
+    console.log('JAdminTools Deployed: ', JATinstance.address);
+
+    const JFCinstance = await deployProxy(JFeesCollector, [JATinstance.address], { from: factoryOwner });
+    console.log('JFeesCollector Deployed: ', JFCinstance.address);
 
     const JTDeployer = await deployProxy(JTranchesDeployer, [], { from: factoryOwner });
     console.log("Tranches Deployer: " + JTDeployer.address);
 
-    const JAinstance = await deployProxy(JAave, [JPOinstance.address, JFCinstance.address, JTDeployer.address], { from: factoryOwner });
+    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, aaveIncentiveController], { from: factoryOwner });
     console.log('JAave Deployed: ', JAinstance.address);
 
     await deployer.deploy(WETHToken);

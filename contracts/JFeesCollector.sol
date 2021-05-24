@@ -168,7 +168,7 @@ contract JFeesCollector is OwnableUpgradeable, ReentrancyGuardUpgradeable, JFees
         path[0] = uniV2Router02.WETH();
         path[1] = _token;
         (uint256 reserveA, uint256 reserveB,) = pairInfo(path[0], path[1]);
-        uint256 amountOutMin = reserveB.mul(_amount).div(reserveA);
+        uint256 amountOutMin = reserveB.div(reserveA).mul(_amount);
         uniV2Router02.swapExactETHForTokens{value: _amount}(amountOutMin, path, address(this), block.timestamp);
     }
 
@@ -183,7 +183,7 @@ contract JFeesCollector is OwnableUpgradeable, ReentrancyGuardUpgradeable, JFees
         path[0] = _token;
         path[1] = uniV2Router02.WETH();
         (uint256 reserveA, uint256 reserveB,) = pairInfo(path[0], path[1]);
-        uint256 amountOutMin = reserveB.mul(_amount).div(reserveA);
+        uint256 amountOutMin = reserveB.div(reserveA).mul(_amount);
         uniV2Router02.swapExactTokensForETH(_amount, amountOutMin, path, address(this), block.timestamp);
     }
 
@@ -199,7 +199,7 @@ contract JFeesCollector is OwnableUpgradeable, ReentrancyGuardUpgradeable, JFees
         path[0] = _tokenSent;
         path[1] = _tokenBack;
         (uint256 reserveA, uint256 reserveB,) = pairInfo(path[0], path[1]);
-        uint256 amountOutMin = reserveB.mul(_amount).div(reserveA);
+        uint256 amountOutMin = reserveB.div(reserveA).mul(_amount);
         uniV2Router02.swapExactTokensForTokens(_amount, amountOutMin, path, address(this), block.timestamp);
     }
 
