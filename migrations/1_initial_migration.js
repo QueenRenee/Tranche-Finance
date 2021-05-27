@@ -102,37 +102,39 @@ module.exports = async (deployer, network, accounts) => {
   } else if (network === 'matic') {
     let { AAVE_INCENTIVE_CONTROLLER, AAVE_POOL, MATIC_ADDRESS, amWMATIC_ADDRESS, USDC_ADDRESS, amUSDC_ADDRESS, DAI_ADDRESS, amDAI_ADDRESS } = process.env;
     const factoryOwner = accounts[0];
-    const JATinstance = await deployProxy(JAdminTools, [], { from: factoryOwner });
+
+    const JATinstance = await deployProxy(JAdminTools, [], { from: factoryOwner, chainId: 80001 });
     console.log('JAdminTools Deployed: ', JATinstance.address);
 
     const JFCinstance = await deployProxy(JFeesCollector, [JATinstance.address], { from: factoryOwner });
     console.log('JFeesCollector Deployed: ', JFCinstance.address);
-
+   
     const JTDeployer = await deployProxy(JTranchesDeployer, [], { from: factoryOwner });
     console.log("Tranches Deployer: " + JTDeployer.address);
 
-    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, AAVE_INCENTIVE_CONTROLLER], { from: factoryOwner });
+    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, "0x357D51124f59836DeD84c8a1730D72B749d8BC23"], { from: factoryOwner });
     console.log('JAave Deployed: ', JAinstance.address);
 
-    await aaveDeployer.setJAaveAddress(JAaveInstance.address, { from: factoryOwner });
+    await JTDeployer.setJAaveAddress(JAinstance.address, { from: factoryOwner });
     console.log('aave deployer 1');
 
-    await JAaveInstance.setAavePoolAddressProvider(AAVE_POOL, { from: factoryOwner });
+    await JAinstance.setAavePoolAddressProvider(AAVE_POOL, { from: factoryOwner });
     console.log('aave deployer 2');
 
     await JAinstance.addTrancheToProtocol(MATIC_ADDRESS, amWMATIC_ADDRESS, "Tranche A - Aave Polygon MATIC", "aamMATIC", "Tranche B - Aave Polygon MATIC", "bamMATIC", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
-    await JAinstance.addTrancheToProtocol(DAI_ADDRESS, amDAI_Address, "Tranche A - Aave Polygon DAI", "aamDAI", "Tranche B - Aave Polygon DAI", "bamDAI", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
-    await JAinstance.addTrancheToProtocol(USDC_ADDRESS, amUSDC_Address, "Tranche A - Aave Polygon USDC", "aamUSDC", "Tranche B - Aave Polygon USDC", "bamUSDC", web3.utils.toWei("0.03", "ether"), 6, { from: factoryOwner });
-    console.log('aave deployer 3');
+    console.log('added tranche 1')
+    await JAinstance.addTrancheToProtocol(DAI_ADDRESS, amDAI_ADDRESS, "Tranche A - Aave Polygon DAI", "aamDAI", "Tranche B - Aave Polygon DAI", "bamDAI", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
+    console.log('added tranche 2')
+    await JAinstance.addTrancheToProtocol(USDC_ADDRESS, amUSDC_ADDRESS, "Tranche A - Aave Polygon USDC", "aamUSDC", "Tranche B - Aave Polygon USDC", "bamUSDC", web3.utils.toWei("0.03", "ether"), 6, { from: factoryOwner });
+    console.log('added tranche 3');
 
-
-    trParams = await JCompoundInstance.trancheAddresses(0);
+    trParams = await JAinstance.trancheAddresses(0);
     let MaticTrA = await JTrancheAToken.at(trParams.ATrancheAddress);
     let MaticTrB = await JTrancheBToken.at(trParams.BTrancheAddress);
-    trParams = await JCompoundInstance.trancheAddresses(1);
+    trParams = await JAinstance.trancheAddresses(1);
     let DaiTrA = await JTrancheAToken.at(trParams.ATrancheAddress);
     let DaiTrB = await JTrancheBToken.at(trParams.BTrancheAddress);
-    trParams = await JCompoundInstance.trancheAddresses(2);
+    trParams = await JAinstance.trancheAddresses(2);
     let USDCTrA = await JTrancheAToken.at(trParams.ATrancheAddress);
     let USDCTrB = await JTrancheBToken.at(trParams.BTrancheAddress);
 
