@@ -32,18 +32,23 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
      * @param _feesCollector fees collector contract address
      * @param _tranchesDepl tranches deployer contract address
      * @param _aaveIncentiveController Aave incentive controller address (mainnet: 0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5)
+     * @param _wethAddress weth / wmatic contract address
+     * @param _blocksPerYear blocks / year
      */
     function initialize(address _adminTools, 
             address _feesCollector, 
             address _tranchesDepl,
-            address _aaveIncentiveController) external initializer() {
+            address _aaveIncentiveController,
+            address _wethAddress,
+            uint256 _blocksPerYear) external initializer() {
         OwnableUpgradeable.__Ownable_init();
         adminToolsAddress = _adminTools;
         feesCollectorAddress = _feesCollector;
         tranchesDeployerAddress = _tranchesDepl;
         aaveIncentiveControllerAddress = _aaveIncentiveController;
         redeemTimeout = 3; //default
-        totalBlocksPerYear = 2372500;
+        wrappedEthAddress = _wethAddress;
+        totalBlocksPerYear = _blocksPerYear;
     }
 
     /**
@@ -82,10 +87,18 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
 
     /**
      * @dev set Aave Pool Address Provider
-     * @param _addressProviderContract aave lending pool address provider contract address (kovan: 0x88757f2f99175387aB4C6a4b3067c77A695b0349)
+     * @param _addressProviderContract aave lending pool address provider contract address
      */
     function setAavePoolAddressProvider(address _addressProviderContract) external onlyAdmins {
         lendingPoolAddressProvider = _addressProviderContract;
+    }
+
+    /**
+     * @dev set Aave Pool Address Provider
+     * @param _aaveIncentiveController aave incentive controller address
+     */
+    function setAaveIncentiveControllerAddress(address _aaveIncentiveController) external onlyAdmins {
+        aaveIncentiveControllerAddress = _aaveIncentiveController;
     }
 
     /**
@@ -127,7 +140,7 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
         IAaveProtocolDataProvider aaveProtocolDataProvider = getDataProvider();
         address asset = trancheAddresses[_trancheNum].buyerCoinAddress;
         if (asset == ETH_ADDR)
-            asset = WETH_ADDRESS;
+            asset = wrappedEthAddress;
         return aaveProtocolDataProvider.getReserveData(asset);
     }
 
@@ -135,9 +148,9 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
         return ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
     }
 
-    function changeToWeth(address _token) private pure returns(address) {
+    function changeToWeth(address _token) private view returns(address) {
         if (_token == ETH_ADDR) {
-            return WETH_ADDRESS;
+            return wrappedEthAddress;
         }
         return _token;
     }
@@ -162,14 +175,14 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
 
         uint256 oldBalance;
         uint256 newBalance;
-        if (_tokenAddr == WETH_ADDRESS) {
+        if (_tokenAddr == wrappedEthAddress) {
             // get eth balance
             oldBalance = getEthBalance();
             // if weth, pull to proxy and return ETH to user
             ILendingPool(lendingPool).withdraw(_tokenAddr, _amount, address(this));
             // from Weth to Eth, all the Weth balance --> no Weth in contract
-            uint256 wethBal = IERC20Upgradeable(WETH_ADDRESS).balanceOf(address(this));
-            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(WETH_ADDRESS), wethGatewayAddress, wethBal);
+            uint256 wethBal = IERC20Upgradeable(wrappedEthAddress).balanceOf(address(this));
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(wrappedEthAddress), wethGatewayAddress, wethBal);
             IWETHGateway(wethGatewayAddress).withdrawETH(wethBal);
             // get new eth balance
             newBalance = getEthBalance();
@@ -389,7 +402,7 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
         if (_tokenAddr == ETH_ADDR) {
             require(msg.value == _amount, "JAave: msg.value not equal to amount");
             IWETHGateway(wethGatewayAddress).depositETH{value: msg.value}();
-            _tokenAddr = WETH_ADDRESS;
+            _tokenAddr = wrappedEthAddress;
         } else {
             // check approve
             require(IERC20Upgradeable(_tokenAddr).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed buying tranche A");
@@ -468,7 +481,7 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
         if (_tokenAddr == ETH_ADDR) {
             require(msg.value == _amount, "JAave: msg.value not equal to amount");
             IWETHGateway(wethGatewayAddress).depositETH{value: msg.value}();
-            _tokenAddr = WETH_ADDRESS;
+            _tokenAddr = wrappedEthAddress;
         } else {
             // check approve
             require(IERC20Upgradeable(_tokenAddr).allowance(msg.sender, address(this)) >= _amount, "JAave: allowance failed buying tranche B");

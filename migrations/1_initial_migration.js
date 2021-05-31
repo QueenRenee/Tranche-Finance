@@ -40,12 +40,13 @@ module.exports = async (deployer, network, accounts) => {
     const JTDeployer = await deployProxy(JTranchesDeployer, [], { from: factoryOwner });
     console.log("Tranches Deployer: " + JTDeployer.address);
 
-    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, aaveIncentiveController], { from: factoryOwner });
-    console.log('JAave Deployed: ', JAinstance.address);
-
     await deployer.deploy(WETHToken);
     const JWethinstance = await WETHToken.deployed();
     console.log('WETH Token Deployed: ', JWethinstance.address);
+
+    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, 
+      aaveIncentiveController, JWethinstance.address, 2540000], { from: factoryOwner });
+    console.log('JAave Deployed: ', JAinstance.address);
 
     await deployer.deploy(WETHGateway, JWethinstance.address, JAinstance.address);
     const JWGinstance = await WETHGateway.deployed();
