@@ -571,24 +571,28 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
      * @dev get token rewards amount
      * @return amount of unclaimed tokens
      */
-    function getAaveUnclaimedRewards() external view returns(uint256) {
+    function getAaveUnclaimedRewards() public view returns(uint256) {
         return IAaveIncentivesController(aaveIncentiveControllerAddress).getUserUnclaimedRewards(address(this));
     }
 
     /**
      * @dev claim token rewards from all assets in protocol and transfer them to fees collector
-     * @param _rewardToken reward token address
-     * @param _amount amount of rewards token to claim (set it to 0 if you want to claim for all tokens)
+     *  _rewardToken reward token address
+     *  _amount amount of rewards token to claim (set it to 0 if you want to claim for all tokens)
      */
-    function claimAaveRewards(address _rewardToken, uint256 _amount) external {
+    function claimAaveRewards(/*address _rewardToken, uint256 _amount*/) external {
         address[] memory assets = new address[](tranchePairsCounter);
         for (uint256 i = 0; i < tranchePairsCounter; i++) {
             assets[i] = trancheAddresses[i].aTokenAddress;
         }
-        uint256 claimedRewards = IAaveIncentivesController(aaveIncentiveControllerAddress).claimRewards(assets,  _amount, address(this));
-        if (claimedRewards > 0) {
-            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_rewardToken), feesCollectorAddress, claimedRewards);
-        }
+        // uint256 claimedRewards = IAaveIncentivesController(aaveIncentiveControllerAddress).claimRewards(assets, _amount, address(this));
+        // if (claimedRewards > 0) {
+        //     uint256 availableRewards = getTokenBalance(_rewardToken);
+        //     SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_rewardToken), feesCollectorAddress, availableRewards);
+        // }
+        uint256 claimableRewards = getAaveUnclaimedRewards();
+        if (claimableRewards > 0)
+            IAaveIncentivesController(aaveIncentiveControllerAddress).claimRewards(assets, claimableRewards, feesCollectorAddress);
     }
 
 }
