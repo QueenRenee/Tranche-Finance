@@ -583,7 +583,8 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
     function claimAaveRewards(/*address _rewardToken, uint256 _amount*/) external {
         address[] memory assets = new address[](tranchePairsCounter);
         for (uint256 i = 0; i < tranchePairsCounter; i++) {
-            assets[i] = trancheAddresses[i].aTokenAddress;
+            //assets[i] = trancheAddresses[i].aTokenAddress;
+            assets[i] = trancheAddresses[i].buyerCoinAddress;
         }
         // uint256 claimedRewards = IAaveIncentivesController(aaveIncentiveControllerAddress).claimRewards(assets, _amount, address(this));
         // if (claimedRewards > 0) {
