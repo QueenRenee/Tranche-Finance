@@ -101,7 +101,7 @@ module.exports = async (deployer, network, accounts) => {
       console.log(`JAave deployed at: ${JAaveInstance.address}`);
     }
   } else if (network === 'matic') {
-    let { AAVE_INCENTIVE_CONTROLLER, AAVE_POOL, MATIC_ADDRESS, amWMATIC_ADDRESS, USDC_ADDRESS, amUSDC_ADDRESS, DAI_ADDRESS, amDAI_ADDRESS } = process.env;
+    let { AAVE_POOL, MATIC_ADDRESS, WMATIC_ADDRESS, amWMATIC_ADDRESS, USDC_ADDRESS, amUSDC_ADDRESS, DAI_ADDRESS, amDAI_ADDRESS } = process.env;
     const factoryOwner = accounts[0];
 
     const JATinstance = await deployProxy(JAdminTools, [], { from: factoryOwner, chainId: 80001 });
@@ -113,14 +113,23 @@ module.exports = async (deployer, network, accounts) => {
     const JTDeployer = await deployProxy(JTranchesDeployer, [], { from: factoryOwner });
     console.log("Tranches Deployer: " + JTDeployer.address);
 
-    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, "0x357D51124f59836DeD84c8a1730D72B749d8BC23"], { from: factoryOwner });
+
+    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, '0x357D51124f59836DeD84c8a1730D72B749d8BC23', WMATIC_ADDRESS, 15768000], { from: factoryOwner });
     console.log('JAave Deployed: ', JAinstance.address);
 
+    await deployer.deploy(WETHGateway, WMATIC_ADDRESS, JAinstance.address);
+    const JWGinstance = await WETHGateway.deployed();
+    console.log('WETHGateway Deployed: ', JWGinstance.address);
+
+    // const JTDeployer = await JTranchesDeployer.at('0x68310EbB80883AbcB2bCd87A28855447d0CafeD1');
     await JTDeployer.setJAaveAddress(JAinstance.address, { from: factoryOwner });
     console.log('aave deployer 1');
+    await JAinstance.setWETHGatewayAddress(JWGinstance.address, { from: factoryOwner });
+    console.log('aave deployer 2');
+
 
     await JAinstance.setAavePoolAddressProvider(AAVE_POOL, { from: factoryOwner });
-    console.log('aave deployer 2');
+    console.log('aave deployer 3');
 
     await JAinstance.addTrancheToProtocol(MATIC_ADDRESS, amWMATIC_ADDRESS, "Tranche A - Aave Polygon MATIC", "aamMATIC", "Tranche B - Aave Polygon MATIC", "bamMATIC", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
     console.log('added tranche 1')
