@@ -1,6 +1,7 @@
 ## AaveProtocol usage
 
-a) deploy JTrancheDeployer and JAave contract and initialize them (JAave parameters: address _priceOracle, address _feesCollector, address _tranchesDepl)
+a) deploy JTrancheDeployer and JAave contract and initialize them (JAave parameters: address _adminTools, address _feesCollector, address _tranchesDepl,
+            address _aaveIncentiveController, address _wethAddress, address _rewardsToken, uint256 _blocksPerYear)
 
 b) call setAavePoolAddressProvider(address _aavePool)
 
@@ -19,6 +20,7 @@ d) call addTrancheToProtocol(address _erc20Contract, string memory _nameA, strin
 
     add USDC tranche: "0xe22da380ee6B445bb8273C81944ADEB6E8450422","0xe12AFeC5aa12Cf614678f9bFeeB98cA9Bb95b5B0","USDC tranche A","USDCA","USDC Tranche B","USDCB",web3.utils.toWei("0.02", "ether"),"6"
 
+e) remember to enable every tranche deposit with setTrancheDeposit(uint256 _trancheNum, bool _enable) function
 
 Users can now call buy and redeem functions for tranche A & B tokens
 
@@ -38,11 +40,11 @@ Limit is 24 KiB for single contract
     <tbody>
         <tr>
             <td>JAave</td>
-            <td><code>18.13 KiB</code></td>
+            <td><code>19.22 KiB</code></td>
         </tr>
         <tr>
             <td>JAaveStorage</td>
-            <td><code>1.60 KiB</code></td>
+            <td><code>1.71 KiB</code></td>
         </tr>
         <tr>
             <td>JAdminTools</td>
@@ -54,7 +56,7 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>JFeesCollector</td>
-            <td><code>2.73 KiB</code></td>
+            <td><code>10.82 KiB</code></td>
         </tr>
         <tr>
             <td>JFeesCollectorStorage</td>
@@ -62,7 +64,7 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>JTrancheAToken</td>
-            <td><code>7.96 KiB</code></td>
+            <td><code>10.18 KiB</code></td>
         </tr>
         <tr>
             <td>JTrancheATokenStorage</td>
@@ -70,7 +72,7 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>JTrancheBToken</td>
-            <td><code>7.96 KiB</code></td>
+            <td><code>10.18 KiB</code></td>
         </tr>
         <tr>
             <td>JTrancheBTokenStorage</td>
@@ -78,7 +80,7 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>JTranchesDeployer</td>
-            <td><code>19.13 KiB</code></td>
+            <td><code>23.39 KiB</code></td>
         </tr>
         <tr>
             <td>JTranchesDeployerStorage</td>

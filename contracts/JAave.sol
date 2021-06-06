@@ -33,6 +33,7 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
      * @param _tranchesDepl tranches deployer contract address
      * @param _aaveIncentiveController Aave incentive controller address (mainnet: 0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5)
      * @param _wethAddress weth / wmatic contract address
+     * @param _rewardsToken rewards token address (slice token address)
      * @param _blocksPerYear blocks / year
      */
     function initialize(address _adminTools, 
@@ -40,6 +41,7 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
             address _tranchesDepl,
             address _aaveIncentiveController,
             address _wethAddress,
+            address _rewardsToken,
             uint256 _blocksPerYear) external initializer() {
         OwnableUpgradeable.__Ownable_init();
         adminToolsAddress = _adminTools;
@@ -49,6 +51,7 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
         redeemTimeout = 3; //default
         wrappedEthAddress = _wethAddress;
         totalBlocksPerYear = _blocksPerYear;
+        rewardsToken = _rewardsToken;
     }
 
     /**
@@ -245,9 +248,9 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
         trancheAddresses[tranchePairsCounter].buyerCoinAddress = _buyerCoinAddress;
         trancheAddresses[tranchePairsCounter].aTokenAddress = _aTokenAddress;
         trancheAddresses[tranchePairsCounter].ATrancheAddress = 
-                IJTranchesDeployer(tranchesDeployerAddress).deployNewTrancheATokens(_nameA, _symbolA, msg.sender);
+                IJTranchesDeployer(tranchesDeployerAddress).deployNewTrancheATokens(_nameA, _symbolA, msg.sender, rewardsToken);
         trancheAddresses[tranchePairsCounter].BTrancheAddress = 
-                IJTranchesDeployer(tranchesDeployerAddress).deployNewTrancheBTokens(_nameB, _symbolB, msg.sender); 
+                IJTranchesDeployer(tranchesDeployerAddress).deployNewTrancheBTokens(_nameB, _symbolB, msg.sender, rewardsToken); 
         
         trancheParameters[tranchePairsCounter].underlyingDecimals = _underlyingDec;
         trancheParameters[tranchePairsCounter].trancheAFixedPercentage = _fixedRpb;
@@ -264,6 +267,15 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
         tranchePairsCounter = tranchePairsCounter.add(1);
     } 
 
+    /**
+     * @dev enables or disables tranche deposit (default: disabled)
+     * @param _trancheNum tranche number
+     * @param _enable true or false
+     */
+    function setTrancheDeposit(uint256 _trancheNum, bool _enable) external onlyAdmins {
+        trancheDepositEnabled[_trancheNum] = _enable;
+    }
+    
     /**
      * @dev set Tranche A exchange rate
      * @param _trancheNum tranche number
@@ -396,6 +408,7 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
      * @param _amount amount of stable coins sent by buyer
      */
     function buyTrancheAToken(uint256 _trancheNum, uint256 _amount) external payable nonReentrant {
+        require(trancheDepositEnabled[_trancheNum], "JAave: tranche deposit disabled");
         uint256 prevAaveTokenBalance = getTokenBalance(trancheAddresses[_trancheNum].aTokenAddress);
         address lendingPool = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
         address _tokenAddr = trancheAddresses[_trancheNum].buyerCoinAddress;
@@ -468,6 +481,7 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
      * @param _amount amount of stable coins sent by buyer
      */
     function buyTrancheBToken(uint256 _trancheNum, uint256 _amount) external payable nonReentrant {
+        require(trancheDepositEnabled[_trancheNum], "JAave: tranche deposit disabled");
         // refresh value for tranche A
         setTrancheAExchangeRate(_trancheNum);
         // get tranche B exchange rate
@@ -577,22 +591,28 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
 
     /**
      * @dev claim token rewards from all assets in protocol and transfer them to fees collector
-     *  _rewardToken reward token address
-     *  _amount amount of rewards token to claim (set it to 0 if you want to claim for all tokens)
      */
     function claimAaveRewards(/*address _rewardToken, uint256 _amount*/) external {
         address[] memory assets = new address[](tranchePairsCounter);
         for (uint256 i = 0; i < tranchePairsCounter; i++) {
             assets[i] = trancheAddresses[i].aTokenAddress;
         }
-        // uint256 claimedRewards = IAaveIncentivesController(aaveIncentiveControllerAddress).claimRewards(assets, _amount, address(this));
-        // if (claimedRewards > 0) {
-        //     uint256 availableRewards = getTokenBalance(_rewardToken);
-        //     SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_rewardToken), feesCollectorAddress, availableRewards);
-        // }
+
         uint256 claimableRewards = getAaveUnclaimedRewards();
         if (claimableRewards > 0)
             IAaveIncentivesController(aaveIncentiveControllerAddress).claimRewards(assets, claimableRewards, feesCollectorAddress);
+    }
+
+    /**
+     * @dev claim token rewards from a single assets (aToken) and transfer them to fees collector
+     * @param _assetToken asset token address (aToken)
+     * @param _amount amount of rewards token to claim 
+     */
+    function claimAaveRewardsSingleAsset(address _assetToken, uint256 _amount) external {
+        address[] memory assets = new address[](1);
+        assets[0] = _assetToken;
+        if (_amount > 0)
+            IAaveIncentivesController(aaveIncentiveControllerAddress).claimRewards(assets, _amount, feesCollectorAddress);
     }
 
 }

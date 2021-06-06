@@ -28,8 +28,10 @@ module.exports = async (deployer, network, accounts) => {
   const aaveIncentiveController = '0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5';
 
   if (network == "development") {
-    let { AAVE_INCENTIVE_CONTROLLER } = process.env;
     const factoryOwner = accounts[0];
+
+    const mySLICEinstance = await deployProxy(myERC20, [MYERC20_TOKEN_SUPPLY], { from: tokenOwner });
+    console.log('mySLICE Deployed: ', mySLICEinstance.address);
 
     const JATinstance = await deployProxy(JAdminTools, [], { from: factoryOwner });
     console.log('JAdminTools Deployed: ', JATinstance.address);
@@ -45,7 +47,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log('WETH Token Deployed: ', JWethinstance.address);
 
     const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, 
-      aaveIncentiveController, JWethinstance.address, 2540000], { from: factoryOwner });
+      aaveIncentiveController, JWethinstance.address, mySLICEinstance.address, 2102400], { from: factoryOwner });
     console.log('JAave Deployed: ', JAinstance.address);
 
     await deployer.deploy(WETHGateway, JWethinstance.address, JAinstance.address);
@@ -64,6 +66,8 @@ module.exports = async (deployer, network, accounts) => {
     let EthTrB = await JTrancheBToken.at(trParams.BTrancheAddress);
     console.log("Eth Tranche B Token Address: " + EthTrB.address);
 
+    await JAinstance.setTrancheDeposit(0,true);
+
     await JAinstance.addTrancheToProtocol(DAI_ADDRESS, aDAI_Address, "jDaiTrancheAToken", "JDA", "jDaiTrancheBToken", "JDB", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
     trParams = await JAinstance.trancheAddresses(1);
     let DaiTrA = await JTrancheAToken.at(trParams.ATrancheAddress);
@@ -71,9 +75,11 @@ module.exports = async (deployer, network, accounts) => {
     let DaiTrB = await JTrancheBToken.at(trParams.BTrancheAddress);
     console.log("Eth Tranche B Token Address: " + DaiTrB.address);
 
+    await JAinstance.setTrancheDeposit(1,true);
+
   } else if (network == "kovan") {
     // AAVE_TRANCHE_ADDRESS=0x0D98E839E7db6A6507A0CAd59c4C23cBD7bAB6Af
-    let { FEE_COLLECTOR_ADDRESS, PRICE_ORACLE_ADDRESS, IS_UPGRADE, AAVE_POOL, ADAI_ADDRESS, DAI_ADDRESS, AAVE_INCENTIVE_CONTROLLER } = process.env;
+    let { FEE_COLLECTOR_ADDRESS, PRICE_ORACLE_ADDRESS, REWARD_TOKEN_ADDRESS, IS_UPGRADE, AAVE_POOL, ADAI_ADDRESS, DAI_ADDRESS, AAVE_INCENTIVE_CONTROLLER } = process.env;
     const accounts = await web3.eth.getAccounts();
     const factoryOwner = accounts[0];
     if (IS_UPGRADE == 'true') {
@@ -93,6 +99,8 @@ module.exports = async (deployer, network, accounts) => {
       console.log('aave deployer 2');
 
       await JAaveInstance.addTrancheToProtocol(DAI_ADDRESS, ADAI_ADDRESS, "Tranche A - AAVE DAI", "AADAI", "Tranche B - AAVE DAI", "BADAI", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
+      // remember to enable deposits for the tranche number you add!!!
+      await JAaveInstance.setTrancheDeposit(0,true);
       console.log('aave deployer 3');
 
       // await JAaveInstance.addTrancheToProtocol(ETH_ADDRESS, AWETH_ADDRESS, "Tranche A - AAVE ETH", "AAETH", "Tranche A - AAVE ETH", "BAETH", web3.utils.toWei("0.04", "ether"), 18, { from: factoryOwner });
@@ -101,7 +109,7 @@ module.exports = async (deployer, network, accounts) => {
       console.log(`JAave deployed at: ${JAaveInstance.address}`);
     }
   } else if (network === 'matic') {
-    let { AAVE_POOL, MATIC_ADDRESS, WMATIC_ADDRESS, amWMATIC_ADDRESS, USDC_ADDRESS, amUSDC_ADDRESS, DAI_ADDRESS, amDAI_ADDRESS } = process.env;
+    let { AAVE_POOL, MATIC_ADDRESS, WMATIC_ADDRESS, REWARD_TOKEN_ADDRESS, amWMATIC_ADDRESS, USDC_ADDRESS, amUSDC_ADDRESS, DAI_ADDRESS, amDAI_ADDRESS } = process.env;
     const factoryOwner = accounts[0];
 
     const JATinstance = await deployProxy(JAdminTools, [], { from: factoryOwner, chainId: 80001 });
@@ -113,8 +121,8 @@ module.exports = async (deployer, network, accounts) => {
     const JTDeployer = await deployProxy(JTranchesDeployer, [], { from: factoryOwner });
     console.log("Tranches Deployer: " + JTDeployer.address);
 
-
-    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, '0x357D51124f59836DeD84c8a1730D72B749d8BC23', WMATIC_ADDRESS, 15768000], { from: factoryOwner });
+    const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address, 
+          '0x357D51124f59836DeD84c8a1730D72B749d8BC23', WMATIC_ADDRESS, REWARD_TOKEN_ADDRESS, 15768000], { from: factoryOwner });
     console.log('JAave Deployed: ', JAinstance.address);
 
     await deployer.deploy(WETHGateway, WMATIC_ADDRESS, JAinstance.address);
@@ -132,10 +140,13 @@ module.exports = async (deployer, network, accounts) => {
     console.log('aave deployer 3');
 
     await JAinstance.addTrancheToProtocol(MATIC_ADDRESS, amWMATIC_ADDRESS, "Tranche A - Aave Polygon MATIC", "aamMATIC", "Tranche B - Aave Polygon MATIC", "bamMATIC", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
+    await JAinstance.setTrancheDeposit(0,true);
     console.log('added tranche 1')
     await JAinstance.addTrancheToProtocol(DAI_ADDRESS, amDAI_ADDRESS, "Tranche A - Aave Polygon DAI", "aamDAI", "Tranche B - Aave Polygon DAI", "bamDAI", web3.utils.toWei("0.03", "ether"), 18, { from: factoryOwner });
+    await JAinstance.setTrancheDeposit(1,true);
     console.log('added tranche 2')
     await JAinstance.addTrancheToProtocol(USDC_ADDRESS, amUSDC_ADDRESS, "Tranche A - Aave Polygon USDC", "aamUSDC", "Tranche B - Aave Polygon USDC", "bamUSDC", web3.utils.toWei("0.03", "ether"), 6, { from: factoryOwner });
+    await JAinstance.setTrancheDeposit(2,true);
     console.log('added tranche 3');
 
     trParams = await JAinstance.trancheAddresses(0);

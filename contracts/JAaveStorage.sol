@@ -49,4 +49,7 @@ contract JAaveStorage is OwnableUpgradeable {
     mapping(uint256 => TrancheParameters) public trancheParameters;
     // last block number where the user withdrew/deposited tokens
     mapping(address => uint256) public lastActivity;
+    // enabling / disabling tranches for fund deposit
+    mapping(uint256 => bool) public trancheDepositEnabled;
+    address public rewardsToken;  // slice rewards
 }
