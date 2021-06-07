@@ -23,8 +23,8 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                //hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash original to be retored when deploying on blockchain
-                hex'15a9a369ebe0f06f401c4a22b0b8fcf74ce75bd65c68780d52232bb4e071158f' // init code hash for tests
+                hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash original to be retored when deploying on blockchain
+                // hex'15a9a369ebe0f06f401c4a22b0b8fcf74ce75bd65c68780d52232bb4e071158f' // init code hash for tests
             ))));
     }
 
