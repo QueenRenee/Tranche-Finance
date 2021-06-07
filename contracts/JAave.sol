@@ -85,7 +85,27 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
      * @param _newValue new value
      */
     function setBlocksPerYear(uint256 _newValue) external onlyAdmins {
+        require(_newValue > 0, "JAave: new value not allowed");
         totalBlocksPerYear = _newValue;
+    }
+
+    /**
+     * @dev set reward token address
+     * @param _rewardsToken new value
+     */
+    function setRewardToken(address _rewardsToken) external onlyAdmins {
+        require(_rewardsToken != address(0), "JAave: address not allowed");
+        rewardsToken = _rewardsToken;
+    }
+
+    /**
+     * @dev set reward token address in tranche tokens
+     * @param _trancheToken tranche token address
+     * @param _rewardsToken new value
+     */
+    function setRewardTokenInTrancheToken(address _trancheToken, address _rewardsToken) external onlyAdmins {
+        require(_rewardsToken != address(0), "JAave: address not allowed");
+        IJTrancheTokens(_trancheToken).setRewardTokenAddress(_rewardsToken);
     }
 
     /**

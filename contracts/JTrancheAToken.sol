@@ -29,7 +29,7 @@ contract JTrancheAToken is IFDTBasic, OwnableUpgradeable, ERC20Upgradeable, Acce
         _setupRole(MINTER_ROLE, _jAave);
 	}
 
-	function setRewardTokenAddress(address _token) external onlyOwner {
+	function setRewardTokenAddress(address _token) external override onlyOwner {
 		rewardsToken = IERC20Upgradeable(_token);
 	}
 
