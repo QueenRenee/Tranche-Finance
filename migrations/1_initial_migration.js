@@ -133,15 +133,15 @@ module.exports = async (deployer, network, accounts) => {
     }
 
     const JTDeployer = await deployProxy(JTranchesDeployer, [], { from: factoryOwner });
-    console.log("Tranches Deployer: " + JTDeployer.address);
+    console.log("AAVE_DEPLOYER " + JTDeployer.address);
 
     const JAinstance = await deployProxy(JAave, [JATinstance.address, JFCinstance.address, JTDeployer.address,
       '0x357D51124f59836DeD84c8a1730D72B749d8BC23', WMATIC_ADDRESS, REWARD_TOKEN_ADDRESS, 15768000], { from: factoryOwner });
-    console.log('JAave Deployed: ', JAinstance.address);
+    console.log('AAVE_TRANCHE_ADDRESS', JAinstance.address);
 
     await deployer.deploy(WETHGateway, WMATIC_ADDRESS, JAinstance.address);
     const JWGinstance = await WETHGateway.deployed();
-    console.log('WETHGateway Deployed: ', JWGinstance.address);
+    console.log('WETH_GATEWAY', JWGinstance.address);
 
     // const JTDeployer = await JTranchesDeployer.at('0x68310EbB80883AbcB2bCd87A28855447d0CafeD1');
     await JTDeployer.setJAaveAddress(JAinstance.address, { from: factoryOwner });
