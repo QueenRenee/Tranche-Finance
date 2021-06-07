@@ -11,11 +11,12 @@ var JTranchesDeployer = artifacts.require('JTranchesDeployer');
 var JTrancheAToken = artifacts.require('JTrancheAToken');
 var JTrancheBToken = artifacts.require('JTrancheBToken');
 
+var myERC20 = artifacts.require("./mocks/myERC20.sol");
 var WETHToken = artifacts.require('WETH9_');
 var WETHGateway = artifacts.require('WETHGateway');
 
 module.exports = async (deployer, network, accounts) => {
-  //const MYERC20_TOKEN_SUPPLY = 5000000;
+  const MYERC20_TOKEN_SUPPLY = 5000000;
   //const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
   const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
   //const WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet
@@ -30,7 +31,7 @@ module.exports = async (deployer, network, accounts) => {
   if (network == "development") {
     const factoryOwner = accounts[0];
 
-    const mySLICEinstance = await deployProxy(myERC20, [MYERC20_TOKEN_SUPPLY], { from: tokenOwner });
+    const mySLICEinstance = await deployProxy(myERC20, [MYERC20_TOKEN_SUPPLY], { from: factoryOwner });
     console.log('mySLICE Deployed: ', mySLICEinstance.address);
 
     const JATinstance = await deployProxy(JAdminTools, [], { from: factoryOwner });

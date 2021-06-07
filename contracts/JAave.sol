@@ -73,11 +73,17 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
      */
     function setNewEnvironment(address _adminTools, 
             address _feesCollector, 
-            address _tranchesDepl) external onlyOwner{
+            address _tranchesDepl,
+            address _aaveIncentiveController,
+            address _wethAddress,
+            address _rewardsToken) external onlyOwner{
         require((_adminTools != address(0)) && (_feesCollector != address(0)) && (_tranchesDepl != address(0)), "JAave: check addresses");
         adminToolsAddress = _adminTools;
         feesCollectorAddress = _feesCollector;
         tranchesDeployerAddress = _tranchesDepl;
+        aaveIncentiveControllerAddress = _aaveIncentiveController;
+        wrappedEthAddress = _wethAddress;
+        rewardsToken = _rewardsToken;
     }
 
     /**
@@ -87,25 +93,6 @@ contract JAave is OwnableUpgradeable, ReentrancyGuardUpgradeable, JAaveStorage, 
     function setBlocksPerYear(uint256 _newValue) external onlyAdmins {
         require(_newValue > 0, "JAave: new value not allowed");
         totalBlocksPerYear = _newValue;
-    }
-
-    /**
-     * @dev set reward token address
-     * @param _rewardsToken new value
-     */
-    function setRewardToken(address _rewardsToken) external onlyAdmins {
-        require(_rewardsToken != address(0), "JAave: address not allowed");
-        rewardsToken = _rewardsToken;
-    }
-
-    /**
-     * @dev set reward token address in tranche tokens
-     * @param _trancheToken tranche token address
-     * @param _rewardsToken new value
-     */
-    function setRewardTokenInTrancheToken(address _trancheToken, address _rewardsToken) external onlyAdmins {
-        require(_rewardsToken != address(0), "JAave: address not allowed");
-        IJTrancheTokens(_trancheToken).setRewardTokenAddress(_rewardsToken);
     }
 
     /**
