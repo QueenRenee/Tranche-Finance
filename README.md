@@ -23,7 +23,7 @@ truffle compile --all
 
 [(Back to top)](#Aave-Tranche-Protocol)
 
-## AaveProtocol usage
+## Aave Protocol usage
 
 a) deploy JTrancheDeployer and JAave contract and initialize them (JAave parameters: address _adminTools, address _feesCollector, address _tranchesDepl,
             address _aaveIncentiveController, address _wethAddress, address _rewardsToken, uint256 _blocksPerYear)
@@ -102,7 +102,8 @@ Here (https://docs.aave.com/developers/deployed-contracts/matic-polygon-market) 
         </tr>
         <tr>
             <td>JFeesCollector</td>
-            <td><code>10.40</code></td><td>Fees collector and uniswap swapper (implementation), it changes all fees and extra tokens into new interests for token holders, sending back extra mount to Compound protocol contract</td>
+            <td><code>10.40</code></td>
+            <td>Fees collector and uniswap swapper (implementation), it changes all fees and extra tokens into new interests for token holders, sending back extra amount to Aave protocol contract</td>
         </tr>
         <tr>
             <td>JFeesCollectorStorage</td>
