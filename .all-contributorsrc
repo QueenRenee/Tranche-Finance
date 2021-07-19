@@ -22,6 +22,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "hg-tranche",
+      "name": "hg-tranche",
+      "avatar_url": "https://avatars.githubusercontent.com/u/70196848?v=4",
+      "profile": "https://github.com/hg-tranche",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
