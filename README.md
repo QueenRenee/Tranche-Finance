@@ -1,8 +1,8 @@
 
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-258-orange.svg?style=social)](#contributors)
+<!-- add the tranche link here -->
+[![All Contributors](
+  https://img.shields.io/github/all-contributors/QueenRenee/Tranche-Finance?label=contributors&style=social
+)](#contributors)
 [![Discord](https://img.shields.io/discord/575325880918868007?label=Join%20Tranche&logo=discord&style=social)](https://discord.com/invite/Nv44PTdF3K)
 [![Twitter Follow](https://img.shields.io/twitter/follow/TrancheFinance?style=social)](https://img.shields.io/twitter/follow/TrancheFinance?style=social)
 
@@ -14,7 +14,7 @@
 
 [Tranche Finance](https://tranche.finance/) is a decentralized protocol for managing risk and maximizing returns. 
 
-We hope to improve and change over time through the contributions of community members who submit content, give feedback, or volunteer their time to managing its evolution. If you’re interested in helping to improve [Tranche Finance](https://tranche.finance/), find out [how to contribute](https://ethereum.org/en/contributing/). 
+We hope to improve and change over time through the contributions of community members who submit content, give feedback, or volunteer their time to managing its evolution. If you’re interested in helping to improve [Tranche Finance](https://tranche.finance/). 
 
 # How to contribute
 
@@ -33,16 +33,18 @@ This project follows the [all-contributors](https://allcontributors.org/docs/en/
 
 ### Set up your local environment (optional)
 
-If you're ready to contribute and create your PR, it will help to set up a local environment so you can see your changes.
+If you're ready to contribute and create your PR
 
-1. [Set up your development environment](https://www.gatsbyjs.com/docs/tutorial/part-zero/)
-
-2. Clone your fork
+1. Clone your fork
 
 If this is your first time forking our repo, this is all you need to do for this step:
 
 ```
-$ git clone git@github.com:[your_github_handle]/ethereum-org-website.git && cd ethereum-org-website
+$ git clone git@github.com:[your_github_handle]
+https://github.com/QueenRenee/Tranche-Finance.git
+
+<!-- add the tranche link here -->
+
 ```
 
 If you've already forked the repo, you'll want to ensure your fork is configured and that it's up to date. This will save you the headache of potential merge conflicts.
@@ -50,24 +52,24 @@ If you've already forked the repo, you'll want to ensure your fork is configured
 To [configure your fork](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/configuring-a-remote-for-a-fork):
 
 ```
-$ git remote add upstream https://github.com/ethereum/ethereum-org-website.git
+$ git remote add upstream https://github.com/QueenRenee/Tranche-Finance.git
+
+<!-- add the tranche link here -->
 ```
 
 To [sync your fork with the latest changes](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork):
 
 ```
+
 $ git checkout dev
+
 $ git fetch upstream
+
 $ git merge upstream/dev
-```
-
-3. Install dependencies
 
 ```
-$ yarn
-```
 
-4. Add personal GitHub API token (free)
+2. Add personal GitHub API token (free)
 
 We recommend setting this up when running the project locally, as we use the GitHub API to fetch repository data for many projects & files.
 
@@ -81,7 +83,7 @@ We recommend setting this up when running the project locally, as we use the Git
 GATSBY_GITHUB_TOKEN_READ_ONLY=48f84de812090000demo00000000697cf6e6a059
 ```
 
-5. Add Etherscan API token (free)
+3. Add Etherscan API token (free)
 
 > - [Create an account](https://etherscan.io/) on Etherscan
 > - Navigate to your Account Settings page
@@ -93,7 +95,7 @@ GATSBY_GITHUB_TOKEN_READ_ONLY=48f84de812090000demo00000000697cf6e6a059
 ETHERSCAN_API_KEY=K6NUTARFJZJCIXHF1F1E1YGJZ8RQ29BE4U
 ```
 
-6. Add DeFiPulse API token (free)
+4. Add DeFiPulse API token (free)
 
 > - [Follow this guide](https://docs.defipulse.com/quick-start-guide) to create an account and get your DeFiPulse API token
 > - Copy & paste your Active API Key from DeFiPulse into `.env`
