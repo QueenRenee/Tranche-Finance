@@ -1,16 +1,17 @@
 
-[![All Contributors](https://img.shields.io/badge/all_contributors-258-orange.svg?style=flat-square)](#contributors)
-[![Discord](https://img.shields.io/discord/714888181740339261?color=1C1CE1&label=ethereum.org%20%7C%20Discord%20%F0%9F%91%8B%20&style=flat-square)](https://discord.gg/CetY6Y4)
-[![Twitter Follow](https://img.shields.io/twitter/follow/ethdotorg.svg?style=social)](https://twitter.com/ethdotorg)
+[![All Contributors](https://img.shields.io/badge/all_contributors-258-orange.svg?style=social)](#contributors)
+[![Discord](https://img.shields.io/discord/575325880918868007?label=Join%20Tranche&logo=discord&style=social)](https://discord.com/invite/Nv44PTdF3K)
+[![Twitter Follow](https://img.shields.io/twitter/follow/TrancheFinance?style=social)](https://img.shields.io/twitter/follow/TrancheFinance?style=social)
 
-<h1 align="center" style="margin-top: 1em; margin-bottom: 3em;">
- <img src="https://gblobscdn.gitbook.com/spaces%2F-MP969WsfbfQJJFgxp2K%2Favatar-1617981494187.png?alt=media" alt="Tranche Logo" width="100">
-  <p> <img src="https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif" alt="Waving Hand" width="25px"> Welcome to Tranche Finance </p>
-</h1>
 
- [Tranche Finance](https://tranche.finance/) is a decentralized protocol for managing risk and maximizing returns. 
+<p align="center"> <img src="https://app.tranche.finance/static/media/LogoColored.dd94fef1.svg" width= "1800px"> </p>
 
-We hope to  improved and changed over time through the contributions of community members who submit content, give feedback, or volunteer their time to managing its evolution. If you’re interested in helping to improve [Tranche Finance](https://tranche.finance/), find out [how to contribute](https://ethereum.org/en/contributing/). 
+
+# Welcome to Tranche Finance
+
+[Tranche Finance](https://tranche.finance/) is a decentralized protocol for managing risk and maximizing returns. 
+
+We hope to improve and change over time through the contributions of community members who submit content, give feedback, or volunteer their time to managing its evolution. If you’re interested in helping to improve [Tranche Finance](https://tranche.finance/), find out [how to contribute](https://ethereum.org/en/contributing/). 
 
 # How to contribute
 
