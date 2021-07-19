@@ -24,4 +24,4 @@ assignees: ""
 
 **Want to contribute?**
 
-We love contributions from the Ethereum community! Please comment on an issue if you're interested in helping out with a PR.
+We love contributions from the Tranche community! Please comment on an issue if you're interested in helping out with a PR.

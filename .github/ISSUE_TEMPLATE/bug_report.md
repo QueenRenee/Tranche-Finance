@@ -36,3 +36,6 @@ If applicable, add screenshots to help explain your problem.
 
 **Additional context**
 Add any other context about the problem here.
+
+
+We love contributions from the Tranche community! Please comment on an issue if you're interested in helping out with a PR.

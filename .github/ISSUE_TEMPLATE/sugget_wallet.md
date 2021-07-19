@@ -1,12 +1,11 @@
 ---
 name: Suggest a wallet
-about: Suggest a new wallet to list on ethereum.org
+about: Suggest a new wallet to list on Tranche Finance
 title: ""
 labels: "Type: Feature, Type: Content"
 assignees: ""
 ---
 
-<!--Before suggesting a wallet, make sure you've read [our listing policy](https://www.ethereum.org/en/contributing/adding-products/).
 
 Only continue with the issue if your wallet meets the criteria listed there.
 
@@ -50,7 +49,7 @@ If it does complete the following information which we need to accurately list t
 
 **Does the wallet have an integrated token swap?**
 
-<!-- Can a user swap ETH for other tokens from within a screen in the wallet? -->
+
 
 **Is the wallet a multi-signature wallet?**
 
