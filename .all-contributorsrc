@@ -13,6 +13,15 @@
       "contributions": [
         "content"
       ]
+    },
+    {
+      "login": "fabiopak",
+      "name": "fabiopak",
+      "avatar_url": "https://avatars.githubusercontent.com/u/49749142?v=4",
+      "profile": "https://github.com/fabiopak",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
