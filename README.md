@@ -1,4 +1,7 @@
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-258-orange.svg?style=social)](#contributors)
 [![Discord](https://img.shields.io/discord/575325880918868007?label=Join%20Tranche&logo=discord&style=social)](https://discord.com/invite/Nv44PTdF3K)
 [![Twitter Follow](https://img.shields.io/twitter/follow/TrancheFinance?style=social)](https://img.shields.io/twitter/follow/TrancheFinance?style=social)
@@ -451,6 +454,19 @@ export const query = graphql`
 ## Contributors
 
 
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/QueenRenee"><img src="https://avatars.githubusercontent.com/u/52276446?v=4?s=100" width="100px;" alt=""/><br /><sub><b>QueenRenee</b></sub></a><br /><a href="#content-QueenRenee" title="Content">🖋</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
 
 ### Join our Discord server
