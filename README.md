@@ -1,6 +1,6 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-258-orange.svg?style=social)](#contributors)
 [![Discord](https://img.shields.io/discord/575325880918868007?label=Join%20Tranche&logo=discord&style=social)](https://discord.com/invite/Nv44PTdF3K)
@@ -461,6 +461,7 @@ export const query = graphql`
   <tr>
     <td align="center"><a href="https://github.com/QueenRenee"><img src="https://avatars.githubusercontent.com/u/52276446?v=4?s=100" width="100px;" alt=""/><br /><sub><b>QueenRenee</b></sub></a><br /><a href="#content-QueenRenee" title="Content">🖋</a></td>
     <td align="center"><a href="https://github.com/fabiopak"><img src="https://avatars.githubusercontent.com/u/49749142?v=4?s=100" width="100px;" alt=""/><br /><sub><b>fabiopak</b></sub></a><br /><a href="https://github.com/QueenRenee/Tranche-Finance/commits?author=fabiopak" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/hg-tranche"><img src="https://avatars.githubusercontent.com/u/70196848?v=4?s=100" width="100px;" alt=""/><br /><sub><b>hg-tranche</b></sub></a><br /><a href="https://github.com/QueenRenee/Tranche-Finance/commits?author=hg-tranche" title="Code">💻</a></td>
   </tr>
 </table>
 
