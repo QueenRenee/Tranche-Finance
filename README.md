@@ -92,7 +92,7 @@ GATSBY_GITHUB_TOKEN_READ_ONLY=48f84de812090000demo00000000697cf6e6a059
 
 ```
 // .env Example:
-ETHERSCAN_API_KEY=K6NUTARFJZJCIXHF1F1E1YGJZ8RQ29BE4U
+ETHERSCAN_API_KEY=1E1YGJQ29BE4UKHVCDT43CZ8R
 ```
 
 4. Add DeFiPulse API token (free)
@@ -102,7 +102,7 @@ ETHERSCAN_API_KEY=K6NUTARFJZJCIXHF1F1E1YGJZ8RQ29BE4U
 
 ```
 // .env Example:
-DEFI_PULSE_API_KEY=4953aaf7966dad9c129397e197a0630ed0594f66962dd5fb058972b250da
+DEFI_PULSE_API_KEY=8765654VBNUf7966dad756899c129397e197a0630ed059
 ```
 
 ### Make awesome changes!
@@ -115,17 +115,11 @@ $ git checkout -b new_branch_name
 
 2. Start developing!
 
-```
-$ yarn start
-```
-
-- Open this directory in your favorite text editor / IDE, and see your changes live by visiting `localhost:8000` from your browser
-- Pro Tip: Explore scripts within `package.json` for more build options
 
 3. Commit and prepare for pull request (PR). In your PR commit message, reference the issue it resolves (see [how to link a commit message to an issue using a keyword](https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword)).
 
 ```
-$ git commit -m "brief description of changes [Fixes #1234]"
+$ git commit -m "brief description of changes"
 ```
 
 4. Push to your GitHub account
@@ -136,29 +130,23 @@ $ git push
 
 ### Submit your PR
 
-- After your changes are commited to your GitHub fork, submit a pull request (PR) to the `dev` branch of the `ethereum/ethereum-org-website` repo
+- After your changes are commited to your GitHub fork, submit a pull request (PR) to the `dev` branch of the `tranche-jibrel/Tranche_Finance` repo
 - In your PR description, reference the issue it resolves (see [linking a pull request to an issue using a keyword](https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword))
   - ex. `Updates out of date content [Fixes #1234]`
-- Netlify (our hosting service) deploys all PRs to a publicly accessible preview URL, e.g.:
-  ![Netlify deploy preview](./netlify-deploy-preview.png)
-- _Confirm your Netlify preview deploy looks & functions as expected_
-- Why not say hi and draw attention to your PR in [our discord server](https://discord.gg/CetY6Y4)?
+- Why not say hi and draw attention to your PR in [our discord server](https://discord.com/invite/Nv44PTdF3K)?
 
 ### Wait for review
 
-- The website team reviews every PR
-- See [how decisions are made on content changes](https://ethereum.org/en/contributing/#how-decisions-about-the-site-are-made)
 - Acceptable PRs will be approved & merged into the `dev` branch
 
 ### Release
 
-- `master` is continually synced to Netlify and will automatically deploy new commits to ethereum.org
-- The [website team](https://ethereum.org/en/contributing/#how-decisions-about-the-site-are-made) will periodically merge `dev` into `master` (typically multiple times per week)
-- You can [view the history of releases](https://github.com/ethereum/ethereum-org-website/releases), which include PR highlights
+
+- You can [view the history of releases](https://github.com/tranche-jibrel), which include PR highlights
 
 <hr style="margin-top: 3em; margin-bottom: 3em;">
 
-## The ethereum.org website stack
+<!--## The ethereum.org website stack
 
 - [Node.js](https://nodejs.org/)
 - [Yarn package manager](https://yarnpkg.com/cli/install)
@@ -420,10 +408,10 @@ export const query = graphql`
 `
 // These query results get passed as an object `props.data` to your component
 ```
-
+-->
 <hr style="margin-top: 3em; margin-bottom: 3em;">
 
-![POAP Logo](src/assets/poap-logo.svg)
+![POAP Logo](src/assets/favicon.ico)
 
 ## Claim your POAP!
 
@@ -431,7 +419,7 @@ export const query = graphql`
 
 > The Proof of Attendance Protocol is a dapp that distributes badges in the form of ERC-721 tokens to prove you participated in an event. [More on POAPs](https://www.poap.xyz/).
 
-### ethereum.org 2021 Contributor POAP
+### Tranche.Financce 2021 Contributor POAP
 
 - If you have commited any changes in 2021 so far that were merged into our repo, you have a POAP waiting!
 - This includes our dedicated translators on Crowdin
