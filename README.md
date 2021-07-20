@@ -146,7 +146,7 @@ $ git push
 
 <hr style="margin-top: 3em; margin-bottom: 3em;">
 
-<!--## The ethereum.org website stack
+<!--## The  website stack
 
 - [Node.js](https://nodejs.org/)
 - [Yarn package manager](https://yarnpkg.com/cli/install)
@@ -170,14 +170,14 @@ $ git push
 | `/src`                                   | Main source folder for development                                                                                                                                                                                  |
 | `/src/assets`                            | Image assets                                                                                                                                                                                                        |
 | `/src/components`                        | React components that do not function as stand alone pages                                                                                                                                                          |
-| `/src/content`                           | Markdown/MDX files for site content stored here. <br>For example: `ethereum.org/en/about/` is built from `src/content/about/index.md` <br>The markdown files are parsed and rendered by `src/templates/static.js`\* |
+| `/src/content`                           | Markdown/MDX files for site content stored here. <br>For example: `` is built from `src/content/about/index.md` <br>The markdown files are parsed and rendered by `src/templates/static.js`\* |
 | `/src/content/developers/docs`           | \*Markdown files in here use the Docs template: `src/templates/docs.js`                                                                                                                                             |
 | `/src/content/developers/tutorials`      | \*Markdown files in here use the Tutorial template: `src/templates/tutorial.js`                                                                                                                                     |
 | `/src/data`                              | General data files importable by components                                                                                                                                                                         |
 | `/src/hooks`                             | Custom React hooks                                                                                                                                                                                                  |
 | `/src/intl`                              | Language translation JSON files                                                                                                                                                                                     |
 | `/src/lambda`                            | Lambda function scripts for API calls                                                                                                                                                                               |
-| `/src/pages`<br>`/src/pages-conditional` | React components that function as stand alone pages. <br>For example: `ethereum.org/en/wallets/find-wallet` is built from `src/pages/wallets/find-wallet.js`                                                        |
+|                                                      |
 | `/src/scripts`<br>`/src/utils`           | Custom utility scripts                                                                                                                                                                                              |
 | `/src/styles`                            | Stores `layout.css` which contains root level css styling                                                                                                                                                           |
 | `/src/templates`                         | JSX templates that define layouts of differnt regions of the site                                                                                                                                                   |
@@ -432,7 +432,7 @@ export const query = graphql`
 
 - To help with verification we request GitHub contributors connect their GitHub account with their Discord account (Discord > Settings > Connections > GitHub). Crowdin contributors will be verified directly through Crowdin by our team.
 
-- If you haven't contributed yet and would like to earn a POAP to show your loyalty to the Ethereum space, head over to the [issues](https://github.com/ethereum/ethereum-org-website/issues/) tab to get started!
+- If you haven't contributed yet and would like to earn a POAP to show your loyalty to the Tranche space, head over to the [issues]() tab to get started!
 
 ### 2020 Contributor POAP
 
@@ -463,4 +463,4 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 ### Join our Discord server
 
-We have a space to discuss all things ethereum.org – share your ideas or just say hi over [on Discord](https://discord.gg/CetY6Y4).
+We have a space to discuss all things Tranche – share your ideas or just say hi over [on Discord](https://discord.com/invite/Nv44PTdF3K).
