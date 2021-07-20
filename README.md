@@ -80,7 +80,7 @@ We recommend setting this up when running the project locally, as we use the Git
 
 ```
 // .env Example:
-GATSBY_GITHUB_TOKEN_READ_ONLY=48f84de812090000demo00000000697cf6e6a059
+GATSBY_GITHUB_TOKEN_READ_ONLY=<your GitHub API key here>
 ```
 
 3. Add Etherscan API token (free)
@@ -92,7 +92,7 @@ GATSBY_GITHUB_TOKEN_READ_ONLY=48f84de812090000demo00000000697cf6e6a059
 
 ```
 // .env Example:
-ETHERSCAN_API_KEY=1E1YGJQ29BE4UKHVCDT43CZ8R
+ETHERSCAN_API_KEY=<your Etherscan key here>
 ```
 
 4. Add DeFiPulse API token (free)
@@ -102,7 +102,7 @@ ETHERSCAN_API_KEY=1E1YGJQ29BE4UKHVCDT43CZ8R
 
 ```
 // .env Example:
-DEFI_PULSE_API_KEY=8765654VBNUf7966dad756899c129397e197a0630ed059
+DEFI_PULSE_API_KEY=<your Defi Pulse key here>
 ```
 
 ### Make awesome changes!
