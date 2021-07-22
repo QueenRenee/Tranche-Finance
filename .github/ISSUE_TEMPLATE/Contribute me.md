@@ -7,8 +7,9 @@ assignees: "@QueenRenee"
 ---
 
 
-Only continue with the issue if your wallet meets the criteria listed there.
+Comment on Issue or Pull Request, asking @all-contributors to add a contributor:
 
-If it does complete the following information which we need to accurately list the wallet.-->
+```
+@all-contributors please add @<username> for <contributions>
 
-**Is your wallet globally accessible?**
+```
