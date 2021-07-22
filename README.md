@@ -419,25 +419,22 @@ export const query = graphql`
 
 > The Proof of Attendance Protocol is a dapp that distributes badges in the form of ERC-721 tokens to prove you participated in an event. [More on POAPs](https://www.poap.xyz/).
 
-### Tranche.Financce 2021 Contributor POAP
+### Tranche.Financce Contributor POAP
 
-- If you have commited any changes in 2021 so far that were merged into our repo, you have a POAP waiting!
-- This includes our dedicated translators on Crowdin
+- If you have commited any changes so far that were merged into our repo, you have a POAP waiting!
 
-  [![Discord](https://img.shields.io/discord/714888181740339261?color=1C1CE1&label=Claim%20Your%20POAP!%20%7C%20Discord%20%F0%9F%91%8B%20&style=flat)](https://discord.gg/CetY6Y4)
+  [![Discord](https://img.shields.io/discord/575325880918868007?label=Get%20your%20POAP&logo=discord&style=social(https://discord.com/invite/Nv44PTdF3K)
+)](https://discord.com/invite/Nv44PTdF3K)
 
-- 👆 To claim your Contributor POAP, join our Discord server and paste a link to your contribution in the #poaps-🏆 channel
+- 👆 To claim your Contributor POAP, join our Discord server and paste a link to your contribution in the #poap-claim 🏆 channel
 
 - A member of our team will verify the request and DM you with a personalized link to claim your own freshly minted POAP collectible!
 
 - To help with verification we request GitHub contributors connect their GitHub account with their Discord account (Discord > Settings > Connections > GitHub). Crowdin contributors will be verified directly through Crowdin by our team.
 
-- If you haven't contributed yet and would like to earn a POAP to show your loyalty to the Tranche space, head over to the [issues]() tab to get started!
+- If you haven't contributed yet and would like to earn a POAP to show your loyalty to the Tranche space, head over to the [issues](https://github.com/QueenRenee/Tranche-Finance/issues/new/choose) tab to get started!
 
-### 2020 Contributor POAP
 
-- If you commited any changes in 2020 that were merged into our repo, you also have a POAP waiting, and this again includes our dedicated translators on Crowdin
-- See 2021 section above for how to claim
 
 <hr style="margin-top: 3em; margin-bottom: 3em;">
 
