@@ -144,7 +144,7 @@ $ git push
 
 - You can [view the history of releases](https://github.com/tranche-jibrel), which include PR highlights
 
-<hr style="margin-top: 3em; margin-bottom: 3em;">
+
 
 <!--## The  website stack
 
@@ -433,8 +433,6 @@ export const query = graphql`
 - To help with verification we request GitHub contributors connect their GitHub account with their Discord account (Discord > Settings > Connections > GitHub). Crowdin contributors will be verified directly through Crowdin by our team.
 
 - If you haven't contributed yet and would like to earn a POAP to show your loyalty to the Tranche space, head over to the [issues](https://github.com/QueenRenee/Tranche-Finance/issues/new/choose) tab to get started!
-
-
 
 <hr style="margin-top: 3em; margin-bottom: 3em;">
 
